@@ -4,56 +4,75 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
+import { mockPatients } from '@/lib/mock-data'
 import { Patient } from '@/types'
 
-function calcAge(birthDate?: string) {
-  if (!birthDate) return undefined
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  if (today.getMonth() - birth.getMonth() < 0 || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--
-  return age
+function calcAge(b?: string) {
+  if (!b) return undefined
+  const t = new Date(), d = new Date(b)
+  let a = t.getFullYear() - d.getFullYear()
+  if (t.getMonth() - d.getMonth() < 0 || (t.getMonth() === d.getMonth() && t.getDate() < d.getDate())) a--
+  return a
 }
 
-function GenderBadge({ gender }: { gender?: string }) {
-  if (!gender) return <span className="text-gray-400">—</span>
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-      gender === 'female' ? 'bg-pink-50 text-pink-700' : 'bg-blue-50 text-blue-700'
-    }`}>
-      {gender === 'female' ? 'Perempuan' : 'Laki-laki'}
-    </span>
-  )
+const AVATAR_COLORS = [
+  { bg: '#E8F2EC', text: '#2D5A3D' },
+  { bg: '#F5EDD4', text: '#B8860B' },
+  { bg: '#F5E8E8', text: '#8B2020' },
+  { bg: '#EDE8DF', text: '#5C5449' },
+  { bg: '#E8EDF5', text: '#2D3A5A' },
+]
+
+function getInitials(name: string) {
+  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+function getColor(id: string) {
+  const idx = id.charCodeAt(0) % AVATAR_COLORS.length
+  return AVATAR_COLORS[idx]
+}
+
+function formatDate(s?: string) {
+  if (!s) return '—'
+  return new Date(s).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }> = {
+  active: { label: 'Aktif', bg: 'var(--accent-light)', color: 'var(--accent)' },
+  new: { label: 'Baru', bg: 'var(--gold-light)', color: 'var(--gold)' },
 }
 
 export default function PasienPage() {
-  const [patients, setPatients] = useState<Patient[]>([])
+  const [patients, setPatients] = useState<Patient[]>(mockPatients)
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    async function fetchPatients() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('patients')
-        .select('*, sessions(count)')
-        .order('created_at', { ascending: false })
-
-      setPatients(
-        (data ?? []).map((p: any) => ({
-          ...p,
-          age: calcAge(p.birth_date),
-          total_sessions: p.sessions?.[0]?.count ?? 0,
-        }))
-      )
-      setLoading(false)
+    async function load() {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('patients')
+          .select('*, sessions(session_date)')
+          .order('created_at', { ascending: false })
+        const rows = data ?? []
+        if (rows.length > 0) {
+          setPatients(rows.map((p: any) => {
+            const sessionDates: string[] = (p.sessions ?? []).map((s: any) => s.session_date).filter(Boolean)
+            const lastDate = sessionDates.sort().reverse()[0]
+            return {
+              ...p,
+              age: calcAge(p.birth_date),
+              total_sessions: sessionDates.length,
+              last_session_date: lastDate ?? undefined,
+            }
+          }))
+        }
+      } catch {
+        // keep mock data
+      }
     }
-    fetchPatients()
+    load()
   }, [])
 
   const filtered = patients.filter(p =>
@@ -64,79 +83,92 @@ export default function PasienPage() {
   return (
     <>
       <Topbar
-        title="Pasien"
-        subtitle={loading ? 'Memuat...' : `${patients.length} pasien terdaftar`}
+        title="Daftar Pasien"
         actions={
-          <Link href="/pasien/baru" className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Tambah Pasien
-          </Link>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Cari pasien..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                padding: '7px 14px',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                fontFamily: 'var(--font-dm-sans)',
+                fontSize: 13,
+                background: 'var(--surface)',
+                color: 'var(--ink)',
+                outline: 'none',
+                width: 200,
+              }}
+            />
+            <Link href="/pasien/baru" style={{
+              padding: '8px 16px',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 500,
+              background: 'var(--accent)',
+              color: '#F5F0E8',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}>
+              + Pasien Baru
+            </Link>
+          </div>
         }
       />
 
-      <div className="p-6 flex-1 space-y-4">
-        <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Cari nama atau nomor telepon..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full max-w-sm pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="p-7">
+        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           {loading ? (
-            <div className="py-16 text-center">
-              <div className="inline-block w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mb-3" />
-              <p className="text-sm text-gray-400">Memuat data pasien...</p>
-            </div>
+            <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>Memuat data...</div>
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-sm text-gray-500">
-                {patients.length === 0 ? 'Belum ada pasien. Tambahkan pasien pertama Anda.' : 'Tidak ada pasien ditemukan.'}
-              </p>
-            </div>
+            <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>Tidak ada pasien ditemukan.</div>
           ) : (
-            <table className="w-full text-sm">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Nama</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Usia</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Gender</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Telepon</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Total Sesi</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Sesi Terakhir</th>
-                  <th className="px-5 py-3"></th>
+                <tr style={{ borderBottom: '1px solid var(--border2)' }}>
+                  {['NAMA', 'KELUHAN', 'SESI', 'TERAKHIR', 'STATUS'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 11, color: 'var(--ink3)', fontWeight: 500, letterSpacing: 0.5 }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map(patient => (
-                  <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3.5">
-                      <div className="font-medium text-gray-900">{patient.name}</div>
-                      {patient.email && <div className="text-xs text-gray-400 mt-0.5">{patient.email}</div>}
-                    </td>
-                    <td className="px-5 py-3.5 text-gray-600">{patient.age ? `${patient.age} th` : '—'}</td>
-                    <td className="px-5 py-3.5"><GenderBadge gender={patient.gender} /></td>
-                    <td className="px-5 py-3.5 text-gray-600">{patient.phone || '—'}</td>
-                    <td className="px-5 py-3.5">
-                      <span className="font-medium text-gray-900">{patient.total_sessions ?? 0}</span>
-                      <span className="text-gray-400 text-xs ml-1">sesi</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-gray-600">{formatDate(patient.last_session_date)}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <Link href={`/pasien/${patient.id}`} className="text-teal-600 hover:text-teal-700 text-xs font-medium">
-                        Lihat Detail →
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+              <tbody>
+                {filtered.map((p, i) => {
+                  const col = getColor(p.id)
+                  const isNew = !p.total_sessions || p.total_sessions === 0
+                  const badge = isNew ? STATUS_BADGE.new : STATUS_BADGE.active
+                  return (
+                    <tr
+                      key={p.id}
+                      style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border2)' : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg2)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '')}
+                      onClick={() => window.location.href = `/pasien/${p.id}`}
+                    >
+                      <td style={{ padding: '12px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: col.bg, color: col.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 500, flexShrink: 0 }}>
+                            {getInitials(p.name)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{p.name}</div>
+                            <div style={{ fontSize: 12, color: 'var(--ink3)' }}>
+                              {p.gender === 'female' ? 'Wanita' : p.gender === 'male' ? 'Pria' : '—'}{p.age ? ` · ${p.age}th` : ''}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 20px', color: 'var(--ink2)' }}>{p.address?.split(',')[0] ?? '—'}</td>
+                      <td style={{ padding: '12px 20px', color: 'var(--ink)' }}>{isNew ? 'Baru' : `${p.total_sessions} sesi`}</td>
+                      <td style={{ padding: '12px 20px', color: 'var(--ink3)' }}>{formatDate(p.last_session_date)}</td>
+                      <td style={{ padding: '12px 20px' }}>
+                        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: badge.bg, color: badge.color }}>{badge.label}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}

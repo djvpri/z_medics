@@ -1,11 +1,38 @@
 'use client'
 
-import { useState, use } from 'react'
+import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import Topbar from '@/components/layout/Topbar'
 import { mockSessions } from '@/lib/mock-data'
 import { AIRecommendation } from '@/types'
+import TonguePhotoUploader from '@/components/sessions/TonguePhotoUploader'
+
+function DeleteButtonClient({ id }: { id: string }) {
+  const router = useRouter()
+  const [step, setStep] = useState<'idle' | 'confirm' | 'loading'>('idle')
+
+  async function handleDelete() {
+    setStep('loading')
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
+    await supabase.from('sessions').delete().eq('id', id)
+    router.push('/sesi')
+  }
+
+  const btnBase: React.CSSProperties = { padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', border: '1px solid var(--border)' }
+
+  if (step === 'idle') return <button type="button" onClick={() => setStep('confirm')} style={{ ...btnBase, background: 'var(--surface2)', color: 'var(--ink2)' }}>Hapus</button>
+  if (step === 'loading') return <span style={{ fontSize: 13, color: 'var(--ink3)' }}>Menghapus...</span>
+  return (
+    <div className="flex items-center gap-2">
+      <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Yakin hapus sesi ini?</span>
+      <button type="button" onClick={handleDelete} style={{ ...btnBase, background: 'var(--red)', color: '#fff', border: 'none' }}>Ya, Hapus</button>
+      <button type="button" onClick={() => setStep('idle')} style={{ ...btnBase, background: 'transparent', color: 'var(--ink3)' }}>Batal</button>
+    </div>
+  )
+}
 
 const tongueColorLabel: Record<string, string> = {
   'red': 'Merah', 'pale-red': 'Merah Muda', 'pale': 'Pucat',
@@ -168,16 +195,25 @@ function SOAPSection({ sesi }: { sesi: SesiType }) {
   )
 }
 
+interface ParsedRec {
+  sindrom: string
+  deskripsi: string
+  titik_utama: string[]
+  titik_tambahan: string[]
+  catatan: string
+  model: string
+  timestamp: string
+}
+
 function AISection({ sesi }: { sesi: SesiType }) {
-  const [result, setResult] = useState<AIRecommendation | null>(
-    sesi.ai_recommendation ?? null
-  )
+  const [result, setResult] = useState<ParsedRec | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function getRecommendation() {
     setLoading(true)
     setError('')
+    setResult(null)
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
@@ -194,75 +230,94 @@ function AISection({ sesi }: { sesi: SesiType }) {
           },
         }),
       })
-      if (!res.ok) throw new Error('Gagal mendapat respons AI')
       const data = await res.json()
-      setResult(data)
-    } catch (e) {
-      setError('Gagal menghubungi AI. Pastikan API key sudah dikonfigurasi.')
+      if (data.error) { setError(data.error); return }
+
+      // Ekstrak JSON dari respons (mungkin dibungkus ```json ... ```)
+      const raw = data.result ?? ''
+      const jsonMatch = raw.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0])
+          setResult({ ...parsed, model: data.model, timestamp: data.timestamp })
+        } catch {
+          setError('Format respons tidak valid.')
+        }
+      } else {
+        setError('Gagal memparse respons AI.')
+      }
+    } catch {
+      setError('Gagal menghubungi AI.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5">
+    <div className="rounded-xl p-5" style={{ background: 'var(--ink)' }}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">Rekomendasi AI</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Didukung oleh Claude (TCM Assistant)</p>
+          <div className="flex items-center gap-2">
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4A8C60', display: 'inline-block', animation: 'pulse-dot 2s infinite' }} />
+            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 15, color: '#F5F0E8' }}>Rekomendasi AI</h2>
+            <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: 'rgba(74,140,96,0.2)', color: '#7DC49A', letterSpacing: 0.5 }}>Gemini</span>
+          </div>
+          <p style={{ fontSize: 11, color: 'rgba(245,240,232,0.35)', marginTop: 2 }}>Rekomendasi titik akupuntur berbasis data sesi</p>
         </div>
-        {!result && (
-          <button
-            onClick={getRecommendation}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-            {loading ? 'Meminta AI...' : 'Minta Rekomendasi'}
+        {!result && !loading && (
+          <button onClick={getRecommendation} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid rgba(74,140,96,0.4)', background: 'rgba(74,140,96,0.15)', color: '#7DC49A', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}>
+            ✦ Minta Rekomendasi
           </button>
         )}
       </div>
 
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
-          {error}
-        </div>
-      )}
+      {error && <div style={{ fontSize: 12, color: '#F87171', marginBottom: 8 }}>{error}</div>}
 
       {loading && (
-        <div className="py-8 text-center">
-          <div className="inline-block w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-sm text-gray-500">AI sedang menganalisis data sesi...</p>
+        <div className="flex items-center gap-2 py-4" style={{ color: 'rgba(245,240,232,0.4)', fontSize: 13 }}>
+          <div className="flex gap-1">
+            {[0,1,2].map(i => <span key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(245,240,232,0.4)', display: 'inline-block', animation: `blink 1.2s ${i*0.2}s infinite` }} />)}
+          </div>
+          Menganalisis data sesi...
         </div>
       )}
 
       {result && !loading && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span className="px-2 py-0.5 bg-teal-50 text-teal-700 rounded font-mono">{result.model}</span>
-            <span>•</span>
-            <span>{new Date(result.timestamp).toLocaleString('id-ID')}</span>
+          <p style={{ fontSize: 13, color: 'rgba(245,240,232,0.8)', lineHeight: 1.65 }}
+            dangerouslySetInnerHTML={{ __html: result.deskripsi.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#F5F0E8">$1</strong>') }} />
+
+          {result.titik_utama?.length > 0 && (
+            <div>
+              <p style={{ fontSize: 10, color: 'rgba(245,240,232,0.35)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>Titik yang direkomendasikan:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {result.titik_utama.map(p => (
+                  <span key={p} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, fontWeight: 500, border: '1px solid rgba(74,140,96,0.4)', background: 'rgba(74,140,96,0.2)', color: '#7DC49A', fontFamily: 'monospace' }}>{p} ✓</span>
+                ))}
+                {result.titik_tambahan?.map(p => (
+                  <span key={p} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, fontWeight: 500, border: '1px solid rgba(245,240,232,0.15)', background: 'rgba(245,240,232,0.05)', color: 'rgba(245,240,232,0.5)', fontFamily: 'monospace' }}>+ {p}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {result.catatan && (
+            <p style={{ fontSize: 11, color: 'rgba(245,240,232,0.3)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, lineHeight: 1.6 }}>
+              {result.catatan}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3">
+            <span style={{ fontSize: 10, color: 'rgba(245,240,232,0.25)', fontFamily: 'monospace' }}>{result.model} · {new Date(result.timestamp).toLocaleTimeString('id-ID')}</span>
+            <button onClick={() => setResult(null)} style={{ fontSize: 11, color: 'rgba(245,240,232,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Generate ulang</button>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {result.result}
-          </div>
-          <button
-            onClick={() => setResult(null)}
-            className="text-xs text-gray-400 hover:text-gray-600"
-          >
-            Minta ulang
-          </button>
         </div>
       )}
 
       {!result && !loading && !error && (
-        <div className="py-6 text-center">
-          <p className="text-sm text-gray-400">
-            Klik tombol di atas untuk mendapat rekomendasi titik akupuntur berbasis data sesi ini.
-          </p>
-        </div>
+        <p style={{ fontSize: 13, color: 'rgba(245,240,232,0.35)', paddingBottom: 4 }}>
+          Klik tombol di atas untuk mendapat rekomendasi titik akupuntur berbasis data sesi ini.
+        </p>
       )}
     </div>
   )
@@ -270,18 +325,49 @@ function AISection({ sesi }: { sesi: SesiType }) {
 
 export default function DetailSesiPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const sesi = mockSessions.find(s => s.id === id)
-  if (!sesi) notFound()
+  const [sesi, setSesi] = useState<any>(mockSessions.find(s => s.id === id) ?? null)
+  const [fetching, setFetching] = useState(!mockSessions.find(s => s.id === id))
+
+  useEffect(() => {
+    if (sesi) return // sudah ketemu di mock
+    async function load() {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('sessions')
+        .select('*, patient:patients(id, name, gender)')
+        .eq('id', id)
+        .single()
+      setSesi(data ?? null)
+      setFetching(false)
+    }
+    load()
+  }, [id])
+
+  if (fetching) {
+    return (
+      <>
+        <Topbar title="Detail Sesi" back="/sesi" />
+        <div className="p-7 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat data sesi...</div>
+      </>
+    )
+  }
+
+  if (!sesi) return notFound()
 
   return (
     <>
       <Topbar
         title={`Sesi — ${sesi.patient?.name ?? 'Pasien'}`}
         subtitle={`${formatDate(sesi.session_date)}, ${formatTime(sesi.session_date)}`}
+        back="/sesi"
         actions={
-          <Link href="/sesi" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Kembali
-          </Link>
+          <div className="flex items-center gap-2">
+            <DeleteButtonClient id={sesi.id} />
+            <Link href={`/sesi/${sesi.id}/edit`} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--ink2)', textDecoration: 'none', fontFamily: 'var(--font-dm-serif)' }}>
+              Edit
+            </Link>
+          </div>
         }
       />
 
@@ -335,7 +421,7 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-3">Titik yang Digunakan</h2>
             <div className="flex flex-wrap gap-2">
-              {sesi.points_used.map(p => (
+              {sesi.points_used.map((p: string) => (
                 <span key={p} className="px-3 py-1 bg-teal-50 text-teal-700 text-sm font-mono rounded-lg border border-teal-100">
                   {p}
                 </span>
@@ -351,6 +437,17 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
             <p className="text-sm text-gray-700 leading-relaxed">{sesi.notes}</p>
           </div>
         )}
+
+        {/* Foto Lidah */}
+        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
+            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Foto Lidah</h2>
+            <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Analisis Gemini Vision</span>
+          </div>
+          <div className="p-5">
+            <TonguePhotoUploader context={sesi.chief_complaint} sessionId={sesi.id} />
+          </div>
+        </div>
 
         {/* SOAP Notes */}
         <SOAPSection sesi={sesi} />

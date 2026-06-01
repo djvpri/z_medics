@@ -15,24 +15,26 @@ export function getPrompt(
     case 'treatment-recommendation':
       return {
         system: SYSTEM_BASE + `
-          Fokus pada rekomendasi titik akupuntur berdasarkan sindrom TCM.
-          Format jawaban:
-          1. Sindrom TCM yang teridentifikasi
-          2. Prinsip pengobatan
-          3. Titik utama (berikan kode titik seperti GB20, LI4)
-          4. Titik tambahan opsional
-          5. Catatan teknik (jika ada)
+Kamu HARUS membalas HANYA dalam format JSON berikut, tanpa teks lain di luar JSON:
+{
+  "sindrom": "nama sindrom TCM singkat, misal: Liver Yang Rising dengan Heat",
+  "deskripsi": "1 kalimat ringkas menjelaskan kondisi berdasarkan data pasien, sebutkan sindrom dengan bold **SindromName**",
+  "titik_utama": ["XX00", "XX00", "XX00"],
+  "titik_tambahan": ["XX00", "XX00"],
+  "catatan": "1 kalimat tip teknik atau peringatan penting untuk praktisi"
+}
+Maksimal 4 titik utama, 4 titik tambahan. Gunakan kode standar seperti GB20, LI4, ST36.
         `,
         user: `
-          Data pasien:
-          - Keluhan utama: ${context.chief_complaint}
-          - Lidah: ${context.tongue_color || '-'}, selaput ${context.tongue_coating || '-'}
-          - Nadi: ${context.pulse_quality || '-'}
-          - Skala nyeri: ${context.pain_scale || '-'}/10
-          - Catatan: ${context.notes || '-'}
-          ${context.session_history ? `- Riwayat sesi: ${context.session_history}` : ''}
+Data pasien:
+- Keluhan utama: ${context.chief_complaint}
+- Lidah: ${context.tongue_color || '-'}, selaput ${context.tongue_coating || '-'}
+- Nadi: ${context.pulse_quality || '-'}
+- Skala nyeri: ${context.pain_scale || '-'}/10
+- Catatan: ${context.notes || '-'}
+${context.session_history ? `- Riwayat sesi: ${context.session_history}` : ''}
 
-          Berikan rekomendasi treatment akupuntur berdasarkan data di atas.
+Berikan rekomendasi treatment akupuntur dalam format JSON yang diminta.
         `,
       }
 

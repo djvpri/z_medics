@@ -17,10 +17,11 @@ export async function POST(req: NextRequest) {
     const result = await runAI({ task, context })
 
     return NextResponse.json(result)
-  } catch (error) {
-    console.error('AI API error:', error)
+  } catch (error: any) {
+    const msg = error?.message ?? String(error)
+    console.error('AI API error:', msg)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan pada AI service' },
+      { error: msg },
       { status: 500 }
     )
   }

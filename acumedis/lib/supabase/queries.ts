@@ -20,7 +20,7 @@ export async function getPatients(): Promise<Patient[]> {
     .select('*, sessions(count)')
     .order('created_at', { ascending: false })
 
-  if (error) { console.error(error); return [] }
+  if (error) return []
 
   return (data ?? []).map((p: any) => ({
     ...p,
@@ -49,7 +49,7 @@ export async function getPatientSessions(patientId: string): Promise<Session[]> 
     .eq('patient_id', patientId)
     .order('session_date', { ascending: false })
 
-  if (error) { console.error(error); return [] }
+  if (error) return []
   return data ?? []
 }
 
@@ -62,7 +62,7 @@ export async function getSessions(): Promise<Session[]> {
     .select('*, patient:patients(id, name, gender)')
     .order('session_date', { ascending: false })
 
-  if (error) { console.error(error); return [] }
+  if (error) return []
   return data ?? []
 }
 
@@ -76,6 +76,68 @@ export async function getSession(id: string): Promise<Session | null> {
 
   if (error) return null
   return data
+}
+
+// ── Session photos ────────────────────────────────────────────
+
+export async function getLastTonguePhoto(sessionId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase
+    .from('session_photos')
+    .select('id, ai_analysis, created_at')
+    .eq('session_id', sessionId)
+    .eq('photo_type', 'tongue')
+    .order('created_at', { ascending: false })
+    .limit(1)
+  return data?.[0] ?? null
+}
+
+// Cari foto lidah terbaru dari semua sesi pasien
+export async function getPatientLastTonguePhoto(patientId: string) {
+  const supabase = await createServerSupabaseClient()
+
+  // Ambil semua session ID milik pasien ini
+  const { data: sessions } = await supabase
+    .from('sessions')
+    .select('id')
+    .eq('patient_id', patientId)
+
+  if (!sessions || sessions.length === 0) return null
+
+  const sessionIds = sessions.map(s => s.id)
+
+  const { data } = await supabase
+    .from('session_photos')
+    .select('id, ai_analysis, storage_path, session_id, created_at')
+    .eq('photo_type', 'tongue')
+    .in('session_id', sessionIds)
+    .not('ai_analysis', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  return data?.[0] ?? null
+}
+
+// ── Today's appointments ──────────────────────────────────────
+
+export async function getWeekAppointments() {
+  const supabase = await createServerSupabaseClient()
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const end = new Date(today)
+  end.setDate(end.getDate() + 7)
+  end.setHours(23, 59, 59, 999)
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('id, scheduled_at, duration_minutes, reason, status, session_id, patient:patients(id, name)')
+    .gte('scheduled_at', today.toISOString())
+    .lte('scheduled_at', end.toISOString())
+    .neq('status', 'cancelled')
+    .order('scheduled_at')
+
+  return data ?? []
 }
 
 // ── Dashboard stats ───────────────────────────────────────────
