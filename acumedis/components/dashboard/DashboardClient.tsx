@@ -26,7 +26,7 @@ function getStatus(scheduledAt: string, apptStatus: string): 'selesai' | 'segera
 }
 
 interface Props {
-  stats: { totalPatients: number; totalSessions: number; todaySessions: number; newPatients: number } | null
+  stats: { totalPatients: number; totalSessions: number; todaySessions: number; newPatients: number; topPoint: { name: string; count: number } | null } | null
   weekAppts: any[]
   groupedByDay: Record<string, any[]>
   todayAppts: any[]
@@ -57,7 +57,11 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         ? `${doneCount} ${lang === 'id' ? 'selesai' : 'done'} · ${remainCount} ${lang === 'id' ? 'tersisa' : 'left'}`
         : t.common.today,
     },
-    { label: t.dashboard.aiAccepted, value: '91%', trend: lang === 'id' ? 'akurasi tinggi' : 'high accuracy', up: true },
+    {
+      label: lang === 'id' ? 'Titik Terpopuler' : 'Top Point',
+      value: stats?.topPoint?.name ?? '—',
+      sub: stats?.topPoint ? `${stats.topPoint.count}× ${lang === 'id' ? 'digunakan' : 'used'}` : (lang === 'id' ? 'Belum ada sesi' : 'No sessions yet'),
+    },
     { label: t.dashboard.totalSessions, value: stats?.totalSessions ?? '—', trend: t.dashboard.allTime, up: true },
   ]
 

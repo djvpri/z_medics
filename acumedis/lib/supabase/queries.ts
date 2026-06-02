@@ -145,24 +145,43 @@ export async function getWeekAppointments() {
 export async function getDashboardStats() {
   const supabase = await createServerSupabaseClient()
 
-  const [{ count: totalPatients }, { count: totalSessions }, { count: todaySessions }, { count: newPatients }] =
-    await Promise.all([
-      supabase.from('patients').select('*', { count: 'exact', head: true }),
-      supabase.from('sessions').select('*', { count: 'exact', head: true }),
-      supabase
-        .from('sessions')
-        .select('*', { count: 'exact', head: true })
-        .gte('session_date', new Date().toISOString().slice(0, 10)),
-      supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date(new Date().setDate(1)).toISOString()),
-    ])
+  const [
+    { count: totalPatients },
+    { count: totalSessions },
+    { count: todaySessions },
+    { count: newPatients },
+    { data: sessionPoints },
+  ] = await Promise.all([
+    supabase.from('patients').select('*', { count: 'exact', head: true }),
+    supabase.from('sessions').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('sessions')
+      .select('*', { count: 'exact', head: true })
+      .gte('session_date', new Date().toISOString().slice(0, 10)),
+    supabase
+      .from('patients')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', new Date(new Date().setDate(1)).toISOString()),
+    supabase
+      .from('sessions')
+      .select('points_used')
+      .not('points_used', 'is', null),
+  ])
+
+  // Hitung titik akupuntur paling sering digunakan
+  const pointCount: Record<string, number> = {}
+  for (const s of sessionPoints ?? []) {
+    for (const p of (s.points_used ?? [])) {
+      pointCount[p] = (pointCount[p] ?? 0) + 1
+    }
+  }
+  const topPoint = Object.entries(pointCount).sort((a, b) => b[1] - a[1])[0]
 
   return {
     totalPatients: totalPatients ?? 0,
     totalSessions: totalSessions ?? 0,
     todaySessions: todaySessions ?? 0,
     newPatients: newPatients ?? 0,
+    topPoint: topPoint ? { name: topPoint[0], count: topPoint[1] } : null,
   }
 }
