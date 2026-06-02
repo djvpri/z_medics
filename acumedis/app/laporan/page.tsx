@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { mockSessions, mockPatients } from '@/lib/mock-data'
+import { useT } from '@/contexts/LanguageContext'
 
 interface MonthData { label: string; count: number }
 interface Stats { totalPatients: number; totalSessions: number; monthSessions: number; avgPerWeek: number }
@@ -47,6 +48,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 }
 
 export default function LaporanPage() {
+  const { t, lang } = useT()
   const [stats, setStats] = useState<Stats>({ totalPatients: 0, totalSessions: 0, monthSessions: 0, avgPerWeek: 0 })
   const [monthlyData, setMonthlyData] = useState<MonthData[]>([])
   const [topKeluhan, setTopKeluhan] = useState<{ label: string; count: number }[]>([])
@@ -124,9 +126,9 @@ export default function LaporanPage() {
 
   function exportCSV() {
     const rows = [
-      ['Tanggal', 'Pasien', 'Keluhan'],
+      [t.report.date, t.report.patient, t.session.chiefComplaint],
       ...recentSessions.map(s => [
-        new Date(s.session_date).toLocaleDateString('id-ID'),
+        new Date(s.session_date).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US'),
         (s.patient as any)?.name ?? '-',
         s.chief_complaint ?? '-',
       ]),
@@ -144,21 +146,20 @@ export default function LaporanPage() {
   return (
     <>
       <Topbar
-        title="Laporan"
+        title={t.report.title}
         actions={
           <button onClick={exportCSV} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--ink2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}>
-            Export CSV
+            {t.common.export}
           </button>
         }
       />
 
       <div className="p-7 space-y-5">
-        {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
-          <StatCard label="Total Pasien" value={loading ? '...' : stats.totalPatients} sub="Terdaftar" />
-          <StatCard label="Total Sesi" value={loading ? '...' : stats.totalSessions} sub="Semua waktu" />
-          <StatCard label="Sesi Bulan Ini" value={loading ? '...' : stats.monthSessions} sub={new Date().toLocaleDateString('id-ID', { month: 'long' })} accent />
-          <StatCard label="Rata-rata / Minggu" value={loading ? '...' : stats.avgPerWeek} sub="Estimasi" />
+          <StatCard label={t.report.activePatients} value={loading ? '...' : stats.totalPatients} sub={t.dashboard.registered} />
+          <StatCard label={t.report.totalSessions} value={loading ? '...' : stats.totalSessions} sub={t.dashboard.allTime} />
+          <StatCard label={t.report.thisMonth} value={loading ? '...' : stats.monthSessions} sub={new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'long' })} accent />
+          <StatCard label={t.report.avgPerWeek} value={loading ? '...' : stats.avgPerWeek} sub={t.report.estimated} />
         </div>
 
         {/* Chart + Top Keluhan */}
@@ -166,8 +167,8 @@ export default function LaporanPage() {
           {/* Bar chart */}
           <div className="rounded-[18px] p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-5">
-              <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Sesi per Bulan</h2>
-              <span style={{ fontSize: 11, color: 'var(--ink3)' }}>6 bulan terakhir</span>
+              <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.report.sessionsByMonth}</h2>
+              <span style={{ fontSize: 11, color: 'var(--ink3)' }}>{t.report.last6Months}</span>
             </div>
             {loading ? (
               <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 13 }}>Memuat...</div>
@@ -178,11 +179,11 @@ export default function LaporanPage() {
 
           {/* Top keluhan */}
           <div className="rounded-[18px] p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)', marginBottom: 16 }}>Keluhan Terbanyak</h2>
+            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)', marginBottom: 16 }}>{t.report.topComplaints}</h2>
             {loading ? (
-              <div style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat...</div>
+              <div style={{ fontSize: 13, color: 'var(--ink3)' }}>{t.common.loading}</div>
             ) : topKeluhan.length === 0 ? (
-              <div style={{ fontSize: 13, color: 'var(--ink3)' }}>Belum ada data.</div>
+              <div style={{ fontSize: 13, color: 'var(--ink3)' }}>{t.report.noData}</div>
             ) : (
               <div className="space-y-3">
                 {topKeluhan.map((k, i) => {
@@ -208,7 +209,7 @@ export default function LaporanPage() {
         {/* Riwayat sesi terbaru */}
         <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
-            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Riwayat Sesi Terbaru</h2>
+            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.report.recentSessions}</h2>
             <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{recentSessions.length} sesi</span>
           </div>
           {loading ? (
@@ -217,7 +218,7 @@ export default function LaporanPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border2)' }}>
-                  {['Tanggal', 'Pasien', 'Keluhan Utama'].map(h => (
+                  {[t.report.date, t.report.patient, t.session.chiefComplaint].map(h => (
                     <th key={h} style={{ textAlign: 'left', padding: '10px 20px', fontSize: 11, color: 'var(--ink3)', fontWeight: 500, letterSpacing: 0.5 }}>{h}</th>
                   ))}
                 </tr>

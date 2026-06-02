@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useT } from '@/contexts/LanguageContext'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { mockPatients, mockSessions } from '@/lib/mock-data'
@@ -88,6 +89,7 @@ const AI_SUGGESTIONS: Record<string, { sindrom: string; primary: string[]; secon
 }
 
 function SesiBaruForm() {
+  const { t } = useT()
   const router = useRouter()
   const params = useSearchParams()
   const defaultPatient = params.get('pasien') ?? ''
@@ -247,16 +249,16 @@ function SesiBaruForm() {
   return (
     <>
       <Topbar
-        title="Sesi Baru"
+        title={t.session.newSessionTitle}
         back="/sesi"
         actions={
           <div className="flex items-center gap-2">
             <button type="button" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--ink2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}>
-              Simpan Draft
+              {t.session.saveDraft}
             </button>
             <button form="sesi-form" type="submit" disabled={loading || !form.patient_id || !form.chief_complaint.trim()}
               style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', background: loading ? 'var(--bg2)' : 'var(--accent)', color: loading ? 'var(--ink3)' : '#F5F0E8', transition: 'all 0.15s' }}>
-              {loading ? 'Menyimpan...' : 'Simpan Sesi'}
+              {loading ? t.common.saving : t.session.saveSession}
             </button>
           </div>
         }
@@ -271,21 +273,21 @@ function SesiBaruForm() {
             {/* Informasi Sesi */}
             <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
-                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Informasi Sesi</h2>
+                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.sessionInfo}</h2>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label style={labelStyle}>Pasien</label>
+                    <label style={labelStyle}>{t.session.patientLabel}</label>
                     <select value={form.patient_id} onChange={e => setField('patient_id', e.target.value)} required style={selectStyle}
                       onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')}>
-                      <option value="">Pilih pasien...</option>
+                      <option value="">{t.session.patientLabel}...</option>
                       {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Tanggal & waktu</label>
+                    <label style={labelStyle}>{t.session.dateTime}</label>
                     <input type="datetime-local" value={form.session_date} onChange={e => setField('session_date', e.target.value)} required style={inputStyle}
                       onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
@@ -293,16 +295,16 @@ function SesiBaruForm() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Keluhan utama</label>
+                  <label style={labelStyle}>{t.session.chiefComplaintLabel}</label>
                   <input type="text" value={form.chief_complaint} onChange={e => setField('chief_complaint', e.target.value)}
-                    placeholder="Contoh: Nyeri kepala sebelah kanan, berdenyut, muncul saat stres" required style={inputStyle}
+                    placeholder={t.session.chiefComplaintPlaceholder} required style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label style={labelStyle}>Warna lidah</label>
+                    <label style={labelStyle}>{t.session.tongueColor}</label>
                     <select value={form.tongue_color ?? ''} onChange={e => setField('tongue_color', (e.target.value as TongueColor) || undefined)} style={selectStyle}
                       onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')}>
@@ -311,7 +313,7 @@ function SesiBaruForm() {
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Selaput lidah</label>
+                    <label style={labelStyle}>{t.session.tongueCoating}</label>
                     <select value={form.tongue_coating ?? ''} onChange={e => setField('tongue_coating', (e.target.value as TongueCoating) || undefined)} style={selectStyle}
                       onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')}>
@@ -323,7 +325,7 @@ function SesiBaruForm() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label style={labelStyle}>Kualitas nadi</label>
+                    <label style={labelStyle}>{t.session.pulseQuality}</label>
                     <select value={form.pulse_quality ?? ''} onChange={e => setField('pulse_quality', (e.target.value as PulseQuality) || undefined)} style={selectStyle}
                       onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')}>
@@ -332,7 +334,7 @@ function SesiBaruForm() {
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Skala nyeri (1–10)</label>
+                    <label style={labelStyle}>{t.session.painScaleLabel}</label>
                     <input type="number" min={1} max={10} value={form.pain_scale ?? ''} onChange={e => setField('pain_scale', e.target.value ? Number(e.target.value) : undefined)} placeholder="7" style={inputStyle}
                       onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
@@ -340,9 +342,9 @@ function SesiBaruForm() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Catatan tambahan</label>
+                  <label style={labelStyle}>{t.session.additionalNotes}</label>
                   <textarea value={form.notes ?? ''} onChange={e => setField('notes', e.target.value || undefined)}
-                    placeholder="Observasi lain, faktor pemicu, kondisi emosional..."
+                    placeholder={t.session.notesPlaceholder}
                     rows={3} style={{ ...inputStyle, resize: 'vertical' }}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
@@ -353,12 +355,12 @@ function SesiBaruForm() {
             {/* Titik Akupuntur */}
             <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
-                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Titik Akupuntur yang Digunakan</h2>
-                <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Pilih atau ketik manual</span>
+                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.acupuncturePoints}</h2>
+                <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{t.session.pickOrType}</span>
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <label style={labelStyle}>Meridian</label>
+                  <label style={labelStyle}>{t.session.meridian}</label>
                   <div className="grid grid-cols-6 gap-1.5">
                     {MERIDIANS.map(m => {
                       const active = selectedMeridians.includes(m.code)
@@ -380,9 +382,9 @@ function SesiBaruForm() {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Titik yang digunakan (pisah dengan koma)</label>
+                  <label style={labelStyle}>{t.session.pointsUsed}</label>
                   <input type="text" value={pointsText} onChange={e => setPointsText(e.target.value)}
-                    placeholder="Contoh: GB20, LI4, ST36" style={inputStyle}
+                    placeholder={t.session.pointsPlaceholder} style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
                 </div>
@@ -392,8 +394,8 @@ function SesiBaruForm() {
             {/* Foto Lidah */}
             <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
-                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Foto Lidah</h2>
-                <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Dianalisis Gemini Vision</span>
+                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.tonguePicture}</h2>
+                <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{t.session.analyzedBy}</span>
               </div>
               <div className="p-6">
                 <TonguePhotoUploader

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { NewPatientForm } from '@/types'
+import { useT } from '@/contexts/LanguageContext'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -30,6 +31,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function TambahPasienPage() {
   const router = useRouter()
+  const { t } = useT()
   const [form, setForm] = useState<NewPatientForm>({ name: '', gender: undefined, birth_date: '', phone: '', email: '', address: '' })
   const [loading, setLoading] = useState(false)
 
@@ -46,93 +48,69 @@ export default function TambahPasienPage() {
     const practitioner_id = user?.id ?? process.env.NEXT_PUBLIC_DEV_PRACTITIONER_ID ?? '00000000-0000-0000-0000-000000000001'
     const { error } = await supabase.from('patients').insert({ ...form, practitioner_id })
     setLoading(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    if (error) { alert((t as any).common?.saveFailed ?? 'Failed to save: ' + error.message); return }
     router.push('/pasien')
   }
 
   return (
     <>
       <Topbar
-        title="Pasien Baru"
-        actions={
-          <Link href="/pasien" style={{ padding: '6px 10px', fontSize: 12, fontFamily: 'var(--font-dm-sans)', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--ink2)', textDecoration: 'none' }}>
-            ← Kembali
-          </Link>
-        }
+        title={t.patient.newPatient}
+        back="/pasien"
       />
 
       <div className="p-7">
         <form onSubmit={handleSubmit}>
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
-              <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Informasi Pasien</h2>
+              <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.patient.patientInfo}</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
-                {/* Nama */}
                 <div className="col-span-2">
-                  <label style={labelStyle}>Nama Lengkap <span style={{ color: 'var(--red)' }}>*</span></label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={e => set('name', e.target.value)}
-                    placeholder="Contoh: Ahmad Fauzi"
-                    required
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
-                    onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                  />
+                  <label style={labelStyle}>{t.patient.fullName} <span style={{ color: 'var(--red)' }}>*</span></label>
+                  <input type="text" value={form.name} onChange={e => set('name', e.target.value)} required style={inputStyle}
+                    onFocus={e => (e.target.style.borderColor = 'var(--accent2)')} onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
                 </div>
 
-                {/* Gender */}
                 <div className="col-span-2">
-                  <label style={labelStyle}>Jenis Kelamin</label>
+                  <label style={labelStyle}>{t.patient.gender}</label>
                   <div className="flex gap-2">
                     {(['male', 'female'] as const).map(g => (
-                      <label key={g} style={{
-                        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13.5, border: '1px solid',
-                        borderColor: form.gender === g ? 'var(--accent)' : 'var(--border)',
-                        background: form.gender === g ? 'var(--accent-light)' : 'var(--surface)',
-                        color: form.gender === g ? 'var(--accent)' : 'var(--ink2)',
-                        fontWeight: form.gender === g ? 500 : 400,
-                      }}>
+                      <label key={g} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13.5, border: '1px solid', borderColor: form.gender === g ? 'var(--accent)' : 'var(--border)', background: form.gender === g ? 'var(--accent-light)' : 'var(--surface)', color: form.gender === g ? 'var(--accent)' : 'var(--ink2)', fontWeight: form.gender === g ? 500 : 400 }}>
                         <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={() => set('gender', g)} className="sr-only" />
-                        {g === 'male' ? 'Laki-laki' : 'Perempuan'}
+                        {g === 'male' ? t.patient.male : t.patient.female}
                       </label>
                     ))}
                   </div>
                 </div>
 
-                {/* Tanggal Lahir */}
                 <div>
-                  <label style={labelStyle}>Tanggal Lahir</label>
+                  <label style={labelStyle}>{t.patient.birthDate}</label>
                   <input type="date" value={form.birth_date ?? ''} onChange={e => set('birth_date', e.target.value)} style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                   />
                 </div>
 
-                {/* Telepon */}
                 <div>
-                  <label style={labelStyle}>Nomor Telepon</label>
+                  <label style={labelStyle}>{t.patient.phone}</label>
                   <input type="tel" value={form.phone ?? ''} onChange={e => set('phone', e.target.value)} placeholder="08xxxxxxxxxx" style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                   />
                 </div>
 
-                {/* Email */}
                 <div>
-                  <label style={labelStyle}>Email</label>
+                  <label style={labelStyle}>{t.patient.email}</label>
                   <input type="email" value={form.email ?? ''} onChange={e => set('email', e.target.value)} placeholder="pasien@email.com" style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                   />
                 </div>
 
-                {/* Alamat */}
                 <div className="col-span-2">
-                  <label style={labelStyle}>Alamat</label>
+                  <label style={labelStyle}>{t.patient.address}</label>
                   <textarea
                     value={form.address ?? ''}
                     onChange={e => set('address', e.target.value)}
@@ -156,10 +134,10 @@ export default function TambahPasienPage() {
               fontFamily: 'var(--font-dm-sans)',
               transition: 'all 0.15s',
             }}>
-              {loading ? 'Menyimpan...' : 'Simpan Pasien'}
+              {loading ? t.common.saving : t.patient.savePatient}
             </button>
             <Link href="/pasien" style={{ padding: '9px 16px', fontSize: 13, color: 'var(--ink2)', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
-              Batal
+              {t.common.cancel}
             </Link>
           </div>
         </form>

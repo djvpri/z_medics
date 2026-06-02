@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useT } from '@/contexts/LanguageContext'
 
 interface TongueAnalysis {
   warna: string
@@ -43,6 +44,7 @@ function compressImage(dataUrl: string): Promise<{ base64: string; mimeType: str
 }
 
 export default function TonguePhotoUploader({ onAnalysisComplete, context, sessionId }: Props) {
+  const { t } = useT()
   const [preview, setPreview] = useState<string | null>(null)
   const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -211,8 +213,8 @@ export default function TonguePhotoUploader({ onAnalysisComplete, context, sessi
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
           </svg>
-          <p style={{ fontSize: 13, color: 'var(--ink3)' }}>Klik atau seret foto lidah ke sini</p>
-          <p style={{ fontSize: 11, color: 'var(--ink3)', opacity: 0.6 }}>JPG, PNG, WEBP · otomatis dikompres</p>
+          <p style={{ fontSize: 13, color: 'var(--ink3)' }}>{t.tongue.dropzone}</p>
+          <p style={{ fontSize: 11, color: 'var(--ink3)', opacity: 0.6 }}>{t.tongue.dropzoneHint}</p>
         </div>
       )}
 
@@ -247,14 +249,14 @@ export default function TonguePhotoUploader({ onAnalysisComplete, context, sessi
           {loading ? (
             <>
               <span style={{ width: 14, height: 14, border: '2px solid var(--ink3)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-              Sedang menganalisis foto dengan Gemini Vision...
+              {t.tongue.analyzing}
             </>
           ) : (
             <>
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              Analisis Foto dengan Gemini Vision
+              {t.tongue.analyzeBtn}
             </>
           )}
         </button>
@@ -300,7 +302,7 @@ export default function TonguePhotoUploader({ onAnalysisComplete, context, sessi
         >
           <img src={savedPhotoUrl} alt="Foto lidah tersimpan" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
           <div className="absolute bottom-2 left-2 rounded-md px-2 py-0.5" style={{ background: 'rgba(28,24,19,0.55)', fontSize: 10, color: 'rgba(255,255,255,0.8)' }}>
-            Foto tersimpan · klik untuk perbesar
+            {t.tongue.savedLabel}
           </div>
           <div className="absolute top-2 right-2 rounded-md px-2 py-0.5 flex items-center gap-1" style={{ background: 'rgba(28,24,19,0.55)', fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>
             <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2}>
@@ -315,7 +317,7 @@ export default function TonguePhotoUploader({ onAnalysisComplete, context, sessi
         <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--ink)' }}>
           <div className="flex items-center gap-2">
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4A8C60', display: 'inline-block' }} />
-            <span style={{ fontSize: 11, color: 'rgba(245,240,232,0.45)', letterSpacing: 1, textTransform: 'uppercase' }}>Hasil Analisis Gemini Vision</span>
+            <span style={{ fontSize: 11, color: 'rgba(245,240,232,0.45)', letterSpacing: 1, textTransform: 'uppercase' }}>{t.tongue.resultTitle}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -353,7 +355,7 @@ export default function TonguePhotoUploader({ onAnalysisComplete, context, sessi
 
           <button type="button" onClick={() => { reset(); setTimeout(() => inputRef.current?.click(), 100) }}
             style={{ fontSize: 11, color: 'rgba(74,140,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-dm-sans)' }}>
-            {savedPhotoUrl ? '↺ Upload foto baru' : '↑ Upload foto untuk simpan gambar'}
+            {savedPhotoUrl ? t.tongue.uploadReplace : t.tongue.uploadNew}
           </button>
         </div>
       )}

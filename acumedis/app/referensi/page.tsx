@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
+import { useT } from '@/contexts/LanguageContext'
 
 interface Message {
   id: string
@@ -27,6 +28,7 @@ const QUICK_TOPICS = [
 ]
 
 export default function ReferensiPage() {
+  const { t, lang } = useT()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -55,7 +57,7 @@ export default function ReferensiPage() {
       setMessages(prev =>
         prev.map(m =>
           m.id === id
-            ? { ...m, answer: data.result ?? data.error ?? 'Tidak ada jawaban.', model: data.model, loading: false }
+            ? { ...m, answer: data.result ?? data.error ?? (lang === 'id' ? 'Tidak ada jawaban.' : 'No answer available.'), model: data.model, loading: false }
             : m
         )
       )
@@ -87,24 +89,24 @@ export default function ReferensiPage() {
   return (
     <>
       <Topbar
-        title="Referensi TCM"
-        subtitle="Tanya AI tentang titik akupuntur, meridian, dan sindrom TCM"
+        title={lang === 'id' ? 'Referensi TCM' : 'TCM Reference'}
+        subtitle={lang === 'id' ? 'Tanya AI tentang titik akupuntur, meridian, dan sindrom TCM' : 'Ask AI about acupuncture points, meridians, and TCM syndromes'}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Quick Topics */}
-        <div className="px-6 pt-4 pb-2 border-b border-gray-100 bg-white">
-          <p className="text-xs text-gray-500 mb-2">Topik cepat:</p>
+        <div className="px-6 pt-4 pb-2" style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 8 }}>{lang === 'id' ? 'Topik cepat:' : 'Quick topics:'}</p>
           <div className="flex flex-wrap gap-1.5">
-            {QUICK_TOPICS.map(t => (
+            {QUICK_TOPICS.map(topic => (
               <button
-                key={t.label}
-                onClick={() => ask(t.q)}
+                key={topic.label}
+                onClick={() => ask(topic.q)}
                 disabled={loading}
-                className="px-2.5 py-1 text-xs border border-gray-200 rounded-full text-gray-600 hover:border-teal-400 hover:text-teal-700 hover:bg-teal-50 disabled:opacity-40 transition-colors"
+                style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--border)', borderRadius: 20, color: 'var(--ink2)', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', opacity: loading ? 0.4 : 1 }}
               >
-                {t.label}
+                {topic.label}
               </button>
             ))}
           </div>
@@ -120,9 +122,13 @@ export default function ReferensiPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Referensi TCM dengan AI</p>
-              <p className="text-xs text-gray-400 max-w-xs">
-                Klik topik di atas atau ketik pertanyaan tentang titik akupuntur, meridian, sindrom TCM, atau formula herbal.
+              <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink)', marginBottom: 4 }}>
+                {lang === 'id' ? 'Referensi TCM dengan AI' : 'TCM Reference with AI'}
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--ink3)', maxWidth: 300 }}>
+                {lang === 'id'
+                  ? 'Klik topik di atas atau ketik pertanyaan tentang titik akupuntur, meridian, sindrom TCM, atau formula herbal.'
+                  : 'Click a topic above or type a question about acupuncture points, meridians, TCM syndromes, or herbal formulas.'}
               </p>
             </div>
           )}
@@ -165,27 +171,27 @@ export default function ReferensiPage() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-100 bg-white p-4">
+        <div className="p-4" style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
           <form onSubmit={handleSubmit} className="flex gap-2 items-end">
             <textarea
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Tanya tentang titik akupuntur, meridian, sindrom TCM... (Enter untuk kirim)"
+              placeholder={lang === 'id' ? 'Tanya tentang titik akupuntur, meridian, sindrom TCM...' : 'Ask about acupuncture points, meridians, TCM syndromes...'}
               rows={2}
               disabled={loading}
-              className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none disabled:opacity-50"
+              style={{ flex: 1, padding: '8px 12px', fontSize: 13, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)', color: 'var(--ink)', outline: 'none', resize: 'none', fontFamily: 'var(--font-dm-sans)', opacity: loading ? 0.5 : 1 }}
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-[68px]"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--accent)', color: '#F5F0E8', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', height: 68, opacity: loading || !input.trim() ? 0.5 : 1, fontFamily: 'var(--font-dm-sans)' }}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
               </svg>
-              Kirim
+              {lang === 'id' ? 'Kirim' : 'Send'}
             </button>
           </form>
           <p className="text-[10px] text-gray-400 mt-1.5 ml-1">Shift+Enter untuk baris baru</p>

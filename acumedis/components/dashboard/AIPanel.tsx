@@ -1,11 +1,17 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useT } from '@/contexts/LanguageContext'
 
 interface Msg { role: 'ai' | 'user'; text: string; model?: string }
 
-function getSalam() {
+function getGreeting(lang: 'en' | 'id') {
   const h = new Date().getHours()
+  if (lang === 'en') {
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
   if (h < 11) return 'Selamat pagi'
   if (h < 15) return 'Selamat siang'
   if (h < 18) return 'Selamat sore'
@@ -13,6 +19,7 @@ function getSalam() {
 }
 
 export default function AIPanel() {
+  const { lang } = useT()
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,11 +30,9 @@ export default function AIPanel() {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
 
-      // Ambil nama user
       const { data: { user } } = await supabase.auth.getUser()
-      const name = user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? 'Dokter'
+      const name = user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? (lang === 'id' ? 'Dokter' : 'Doctor')
 
-      // Ambil jadwal hari ini
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const tomorrow = new Date(today)
@@ -45,31 +50,35 @@ export default function AIPanel() {
         .from('patients')
         .select('*', { count: 'exact', head: true })
 
-      // Bangun pesan sambutan
-      const jumlahJadwal = appts?.length ?? 0
-      const salam = getSalam()
+      const greeting = getGreeting(lang)
+      const count = appts?.length ?? 0
+      let text = `${greeting}, ${name}. `
 
-      let text = `${salam}, ${name}. `
-
-      if (jumlahJadwal === 0) {
-        text += `Tidak ada jadwal sesi hari ini. `
+      if (count === 0) {
+        text += lang === 'id'
+          ? `Tidak ada jadwal sesi hari ini. `
+          : `No sessions scheduled for today. `
         if (totalPatients && totalPatients > 0) {
-          text += `Anda memiliki <strong>${totalPatients}</strong> pasien terdaftar.`
+          text += lang === 'id'
+            ? `Anda memiliki <strong>${totalPatients}</strong> pasien terdaftar.`
+            : `You have <strong>${totalPatients}</strong> registered patients.`
         } else {
-          text += `Mulai tambahkan pasien dan jadwal sesi Anda.`
+          text += lang === 'id'
+            ? `Mulai tambahkan pasien dan jadwal sesi Anda.`
+            : `Start by adding patients and scheduling sessions.`
         }
       } else {
-        text += `Hari ini ada <strong>${jumlahJadwal}</strong> jadwal sesi. `
+        text += lang === 'id'
+          ? `Hari ini ada <strong>${count}</strong> jadwal sesi. `
+          : `You have <strong>${count}</strong> sessions scheduled today. `
 
-        const upcoming = appts?.find(a => {
-          const t = new Date(a.scheduled_at)
-          return t > new Date() && a.status === 'scheduled'
-        })
-
+        const upcoming = appts?.find(a => new Date(a.scheduled_at) > new Date() && a.status === 'scheduled')
         if (upcoming) {
-          const patientName = (upcoming.patient as any)?.name ?? 'Pasien'
-          const time = new Date(upcoming.scheduled_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-          text += `Sesi berikutnya: <strong>${patientName}</strong> pukul ${time}`
+          const patientName = (upcoming.patient as any)?.name ?? (lang === 'id' ? 'Pasien' : 'Patient')
+          const time = new Date(upcoming.scheduled_at).toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+          text += lang === 'id'
+            ? `Sesi berikutnya: <strong>${patientName}</strong> pukul ${time}`
+            : `Next session: <strong>${patientName}</strong> at ${time}`
           if (upcoming.reason) text += ` (${upcoming.reason})`
           text += `.`
         }
@@ -81,10 +90,12 @@ export default function AIPanel() {
     generateGreeting().catch(() => {
       setMessages([{
         role: 'ai',
-        text: `${getSalam()}! Tanya saya seputar pasien, titik akupuntur, atau sindrom TCM.`,
+        text: lang === 'id'
+          ? `${getGreeting('id')}! Tanya saya seputar pasien, titik akupuntur, atau sindrom TCM.`
+          : `${getGreeting('en')}! Ask me about patients, acupuncture points, or TCM syndromes.`,
       }])
     })
-  }, [])
+  }, [lang])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -141,7 +152,7 @@ export default function AIPanel() {
             }}
           >
             <div style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3, opacity: 0.4 }}>
-              {m.role === 'ai' ? `AI${m.model ? ` · ${m.model}` : ''}` : 'Anda'}
+              {m.role === 'ai' ? `AI${m.model ? ` · ${m.model}` : ''}` : (lang === 'id' ? 'Anda' : 'You')}
             </div>
             <span dangerouslySetInnerHTML={{ __html: m.text }} />
           </div>
@@ -163,7 +174,7 @@ export default function AIPanel() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="Tanya tentang pasien atau TCM..."
+          placeholder={lang === 'id' ? 'Tanya tentang pasien atau TCM...' : 'Ask about patients or TCM...'}
           className="flex-1 rounded-lg px-3 py-2 text-[12.5px] outline-none"
           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(245,240,232,0.85)', fontFamily: 'var(--font-dm-sans)' }}
         />

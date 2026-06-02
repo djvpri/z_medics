@@ -5,8 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
+import { useT } from '@/contexts/LanguageContext'
 
-const DAYS_SHORT = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+const DAYS_SHORT_ID = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+const DAYS_SHORT_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 function getWeekDays(baseDate: Date) {
   const start = new Date(baseDate)
@@ -29,12 +31,7 @@ function getStatus(scheduledAt: string, appointmentStatus: string): 'selesai' | 
   return 'akan'
 }
 
-const STATUS_CONFIG = {
-  selesai: { label: 'Selesai', bg: 'var(--accent-light)', color: 'var(--accent)' },
-  segera: { label: 'Segera', bg: 'var(--gold-light)', color: 'var(--gold)' },
-  akan: { label: 'Akan datang', bg: 'var(--bg2)', color: 'var(--ink2)' },
-  cancelled: { label: 'Dibatalkan', bg: 'var(--red-light)', color: 'var(--red)' },
-}
+// STATUS_CONFIG is built dynamically using t.schedule in the component
 
 const AVATAR_COLORS = [
   { bg: '#E8F2EC', text: '#2D5A3D' }, { bg: '#F5EDD4', text: '#B8860B' },
@@ -58,6 +55,13 @@ interface Appointment {
 }
 
 function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatusChange: () => void }) {
+  const { t, lang } = useT()
+  const STATUS_CONFIG = {
+    selesai: { label: t.schedule.completed, bg: 'var(--accent-light)', color: 'var(--accent)' },
+    segera: { label: t.schedule.soon, bg: 'var(--gold-light)', color: 'var(--gold)' },
+    akan: { label: t.schedule.upcoming, bg: 'var(--bg2)', color: 'var(--ink2)' },
+    cancelled: { label: t.schedule.cancelled, bg: 'var(--red-light)', color: 'var(--red)' },
+  }
   const router = useRouter()
   const status = getStatus(appt.scheduled_at, appt.status)
   const cfg = STATUS_CONFIG[status]
@@ -145,6 +149,8 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
 }
 
 export default function JadwalPage() {
+  const { t, lang } = useT()
+  const DAYS_SHORT = lang === 'id' ? DAYS_SHORT_ID : DAYS_SHORT_EN
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [currentWeek, setCurrentWeek] = useState(new Date())
@@ -195,14 +201,14 @@ export default function JadwalPage() {
   return (
     <>
       <Topbar
-        title="Jadwal"
+        title={t.schedule.title}
         actions={
           <div className="flex items-center gap-2">
             <button onClick={goToday} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--ink2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}>
-              Hari Ini
+              {t.schedule.goToday}
             </button>
             <Link href="/jadwal/baru" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
-              + Jadwal Baru
+              {t.schedule.newSchedule}
             </Link>
           </div>
         }
@@ -250,24 +256,24 @@ export default function JadwalPage() {
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
             <div>
               <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>
-                {selectedDay.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {selectedDay.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
               </h2>
               {scheduledCount > 0 && (
-                <p style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>{scheduledCount} sesi terjadwal</p>
+                <p style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>{scheduledCount} {t.schedule.sessions} {lang === 'id' ? 'terjadwal' : 'scheduled'}</p>
               )}
             </div>
             <Link href={`/jadwal/baru`} style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-              + Tambah
+              + {lang === 'id' ? 'Tambah' : 'Add'}
             </Link>
           </div>
 
           <div className="px-5">
             {loading ? (
-              <div className="py-12 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat jadwal...</div>
+              <div className="py-12 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>{t.common.loading}</div>
             ) : dayAppointments.length === 0 ? (
               <div className="py-12 text-center space-y-2">
-                <div style={{ fontSize: 13, color: 'var(--ink3)' }}>Tidak ada jadwal untuk hari ini.</div>
-                <Link href="/jadwal/baru" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>+ Buat jadwal baru</Link>
+                <div style={{ fontSize: 13, color: 'var(--ink3)' }}>{t.schedule.noSchedule}</div>
+                <Link href="/jadwal/baru" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>+ {t.schedule.addSchedule}</Link>
               </div>
             ) : (
               dayAppointments.map(appt => (

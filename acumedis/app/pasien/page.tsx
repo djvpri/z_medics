@@ -6,6 +6,7 @@ import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { mockPatients } from '@/lib/mock-data'
 import { Patient } from '@/types'
+import { useT } from '@/contexts/LanguageContext'
 
 function calcAge(b?: string) {
   if (!b) return undefined
@@ -37,12 +38,10 @@ function formatDate(s?: string) {
   return new Date(s).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }> = {
-  active: { label: 'Aktif', bg: 'var(--accent-light)', color: 'var(--accent)' },
-  new: { label: 'Baru', bg: 'var(--gold-light)', color: 'var(--gold)' },
-}
+// STATUS_BADGE labels are now dynamic via t.patient.active / t.patient.new
 
 export default function PasienPage() {
+  const { t } = useT()
   const [patients, setPatients] = useState<Patient[]>(mockPatients)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
@@ -83,37 +82,18 @@ export default function PasienPage() {
   return (
     <>
       <Topbar
-        title="Daftar Pasien"
+        title={t.patient.title}
         actions={
           <div className="flex items-center gap-2">
             <input
               type="text"
-              placeholder="Cari pasien..."
+              placeholder={t.patient.searchPlaceholder}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{
-                padding: '7px 14px',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                fontFamily: 'var(--font-dm-sans)',
-                fontSize: 13,
-                background: 'var(--surface)',
-                color: 'var(--ink)',
-                outline: 'none',
-                width: 200,
-              }}
+              style={{ padding: '7px 14px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'var(--font-dm-sans)', fontSize: 13, background: 'var(--surface)', color: 'var(--ink)', outline: 'none', width: 200 }}
             />
-            <Link href="/pasien/baru" style={{
-              padding: '8px 16px',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 500,
-              background: 'var(--accent)',
-              color: '#F5F0E8',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-            }}>
-              + Pasien Baru
+            <Link href="/pasien/baru" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              {t.patient.addPatient}
             </Link>
           </div>
         }
@@ -122,15 +102,15 @@ export default function PasienPage() {
       <div className="p-7">
         <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           {loading ? (
-            <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>Memuat data...</div>
+            <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>{t.common.loading}</div>
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>Tidak ada pasien ditemukan.</div>
+            <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>{t.patient.noPatients}</div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border2)' }}>
-                  {['NAMA', 'KELUHAN', 'SESI', 'TERAKHIR', 'STATUS'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 11, color: 'var(--ink3)', fontWeight: 500, letterSpacing: 0.5 }}>{h}</th>
+                  {[t.patient.name, t.patient.complaint, t.patient.sessions, t.patient.lastSession, t.patient.status].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 11, color: 'var(--ink3)', fontWeight: 500, letterSpacing: 0.5, textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -138,7 +118,9 @@ export default function PasienPage() {
                 {filtered.map((p, i) => {
                   const col = getColor(p.id)
                   const isNew = !p.total_sessions || p.total_sessions === 0
-                  const badge = isNew ? STATUS_BADGE.new : STATUS_BADGE.active
+                  const badge = isNew
+                    ? { label: t.patient.new, bg: 'var(--gold-light)', color: 'var(--gold)' }
+                    : { label: t.patient.active, bg: 'var(--accent-light)', color: 'var(--accent)' }
                   return (
                     <tr
                       key={p.id}

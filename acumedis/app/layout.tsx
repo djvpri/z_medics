@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import './globals.css'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full"><LanguageProvider>{children}</LanguageProvider></body>
     </html>
   )
 }

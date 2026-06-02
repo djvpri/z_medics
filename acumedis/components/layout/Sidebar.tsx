@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useT } from '@/contexts/LanguageContext'
 
 interface NavItem {
   href: string
@@ -39,6 +40,29 @@ const nav: { section: string; items: NavItem[] }[] = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { t, lang, setLang } = useT()
+
+  const navGroups = [
+    {
+      section: lang === 'id' ? 'Utama' : 'Main',
+      items: [
+        { ...nav[0].items[0], label: t.nav.dashboard },
+        { ...nav[0].items[1], label: t.nav.patients },
+        { ...nav[0].items[2], label: t.nav.newSession },
+      ],
+    },
+    {
+      section: lang === 'id' ? 'Fitur AI' : 'AI Features',
+      items: [{ ...nav[1].items[0], label: t.nav.aiAssistant }],
+    },
+    {
+      section: lang === 'id' ? 'Klinik' : 'Clinic',
+      items: [
+        { ...nav[2].items[0], label: t.nav.schedule },
+        { ...nav[2].items[1], label: t.nav.reports },
+      ],
+    },
+  ]
 
   return (
     <aside
@@ -51,13 +75,13 @@ export default function Sidebar() {
           Z Medics
         </div>
         <div style={{ fontSize: 10, color: 'rgba(245,240,232,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 }}>
-          Rekam Medis Akupuntur
+          {lang === 'id' ? 'Rekam Medis Akupuntur' : 'Acupuncture Medical Record'}
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-0.5">
-        {nav.map(group => (
+        {navGroups.map(group => (
           <div key={group.section}>
             <div style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(245,240,232,0.3)', padding: '12px 8px 6px' }}>
               {group.section}
@@ -70,7 +94,7 @@ export default function Sidebar() {
                   : pathname === item.href || (item.href !== '/sesi/baru' && pathname.startsWith(item.href + '/'))
               return (
                 <Link
-                  key={item.label}
+                  key={item.href}
                   href={item.disabled ? '#' : item.href}
                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all"
                   style={{
@@ -91,6 +115,25 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      {/* Language switcher */}
+      <div className="px-4 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          {(['en', 'id'] as const).map(l => (
+            <button key={l} onClick={() => setLang(l)}
+              style={{
+                flex: 1, padding: '4px 0', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: lang === l ? 'var(--accent)' : 'transparent',
+                color: lang === l ? '#F5F0E8' : 'rgba(245,240,232,0.4)',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* User + Logout */}
       <div className="px-3 py-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
