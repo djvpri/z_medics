@@ -37,7 +37,11 @@ export default function JadwalBaruPage() {
   )
   const [form, setForm] = useState({
     patient_id: '',
-    scheduled_at: new Date(Math.ceil(Date.now() / (30 * 60000)) * (30 * 60000)).toISOString().slice(0, 16), // Bulatkan ke 30 menit ke depan
+    scheduled_at: (() => {
+      const d = new Date(Math.ceil(Date.now() / (30 * 60000)) * (30 * 60000))
+      const pad = (n: number) => String(n).padStart(2, '0')
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+    })(),
     duration_minutes: 45,
     reason: '',
     notes: '',

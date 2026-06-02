@@ -95,7 +95,9 @@ function SesiBaruForm() {
   const defaultPatient = params.get('pasien') ?? ''
   const defaultAlasan = params.get('alasan') ?? ''
   const jadwalId = params.get('jadwal') ?? ''
-  const today = new Date().toISOString().slice(0, 16)
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const today = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
 
   const [patients, setPatients] = useState<{ id: string; name: string }[]>(
     mockPatients.map(p => ({ id: p.id, name: p.name }))
