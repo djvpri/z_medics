@@ -81,7 +81,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
 
       <div className="p-7 flex-1 space-y-5">
         {/* Stat Cards */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {cards.map((card) => (
             <div key={card.label} className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <p style={{ fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{card.label}</p>
@@ -97,7 +97,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         </div>
 
         {/* Main grid */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 320px' }}>
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-[1fr_320px]">
           {/* Schedule */}
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>

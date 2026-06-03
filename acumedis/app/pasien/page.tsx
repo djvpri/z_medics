@@ -100,7 +100,7 @@ export default function PasienPage() {
       />
 
       <div className="p-7">
-        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)', overflowX: 'auto' }}>
           {loading ? (
             <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>{t.common.loading}</div>
           ) : filtered.length === 0 ? (

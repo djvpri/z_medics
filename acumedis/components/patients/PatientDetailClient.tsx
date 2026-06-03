@@ -120,7 +120,7 @@ export default function PatientDetailClient({ patient, sessions, tongueAI, tongu
         </div>
 
         {/* 2-column */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 340px' }}>
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-[1fr_340px]">
           {/* Session history */}
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
