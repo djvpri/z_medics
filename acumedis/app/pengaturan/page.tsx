@@ -21,7 +21,7 @@ const inp: React.CSSProperties = {
 
 export default function PengaturanPage() {
   const [form, setForm] = useState({
-    clinic_name: '', specialty: 'Akupuntur & TCM', city: '', province: '',
+    name: '', clinic_name: '', specialty: 'Akupuntur & TCM', city: '', province: '',
     public_address: '', description: '', phone_public: '', is_listed: false,
   })
   const [loading, setLoading] = useState(true)
@@ -38,6 +38,7 @@ export default function PengaturanPage() {
       const { data } = await supabase.from('practitioners').select('*').eq('id', user.id).single()
       if (data) {
         setForm({
+          name: data.name ?? '',
           clinic_name: data.clinic_name ?? '',
           specialty: data.specialty ?? 'Akupuntur & TCM',
           city: data.city ?? '',
@@ -60,6 +61,7 @@ export default function PengaturanPage() {
     setSaving(true); setSaved(false)
     const supabase = createClient()
     await supabase.from('practitioners').update({
+      name: form.name || null,
       clinic_name: form.clinic_name || null,
       specialty: form.specialty || null,
       city: form.city || null,
@@ -116,6 +118,11 @@ export default function PengaturanPage() {
               <p style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>Ditampilkan kepada calon pasien</p>
             </div>
             <div className="p-5 space-y-4">
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Nama Praktisi / Dokter</label>
+                <input type="text" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Dr. ..." style={inp} onFocus={fo} onBlur={bl} />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Nama Klinik</label>
