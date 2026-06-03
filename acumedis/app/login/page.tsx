@@ -79,7 +79,12 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink2)', display: 'block', marginBottom: 6 }}>{t.auth.password}</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink2)' }}>{t.auth.password}</label>
+                <Link href="/forgot-password" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
+                  {lang === 'id' ? 'Lupa password?' : 'Forgot password?'}
+                </Link>
+              </div>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="current-password" style={inputStyle}
                 onFocus={e => (e.target.style.borderColor = 'var(--accent2)')} onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
             </div>

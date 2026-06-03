@@ -19,6 +19,7 @@ export async function proxy(request: NextRequest) {
 
   // Halaman publik — tidak perlu login
   const isPublicPage = path === '/' || path === '/find' || path.startsWith('/klinik')
+    || path === '/forgot-password' || path === '/reset-password'
   if (isPublicPage) return NextResponse.next()
 
   let supabaseResponse = NextResponse.next({ request })
