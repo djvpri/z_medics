@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 interface Clinic {
   id: string; name: string; clinic_name: string | null; city: string | null
   province: string | null; public_address: string | null; description: string | null
-  specialty: string | null; phone_public: string | null; email: string
+  specialty: string | null; phone_public: string | null; email: string; avatar_url?: string | null
 }
 
 function getInitials(name: string) {
@@ -103,8 +103,10 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
           <div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 24, marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--accent)', color: '#F5F0E8', fontFamily: 'var(--font-dm-serif)', fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {getInitials(clinic.name)}
+                <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--accent)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {clinic.avatar_url
+                    ? <img src={clinic.avatar_url} alt={clinic.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ color: '#F5F0E8', fontFamily: 'var(--font-dm-serif)', fontSize: 22 }}>{getInitials(clinic.name)}</span>}
                 </div>
                 <div>
                   <h1 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 20, color: 'var(--ink)', marginBottom: 2 }}>

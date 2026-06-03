@@ -15,15 +15,9 @@ const PROVINCES = [
 ]
 
 interface Clinic {
-  id: string
-  name: string
-  clinic_name: string | null
-  city: string | null
-  province: string | null
-  public_address: string | null
-  description: string | null
-  specialty: string | null
-  phone_public: string | null
+  id: string; name: string; clinic_name: string | null; city: string | null
+  province: string | null; public_address: string | null; description: string | null
+  specialty: string | null; phone_public: string | null; avatar_url?: string | null
 }
 
 function getInitials(name: string) {
@@ -43,7 +37,7 @@ export default function FindPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('practitioners')
-        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public')
+        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, avatar_url')
         .eq('is_listed', true)
         .order('name')
       setClinics(data ?? [])
@@ -131,8 +125,10 @@ export default function FindPage() {
                   onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)')}
                   onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'none')}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'var(--accent)', color: '#F5F0E8', fontFamily: 'var(--font-dm-serif)', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {getInitials(clinic.name)}
+                    <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'var(--accent)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {clinic.avatar_url
+                        ? <img src={clinic.avatar_url} alt={clinic.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <span style={{ color: '#F5F0E8', fontFamily: 'var(--font-dm-serif)', fontSize: 18 }}>{getInitials(clinic.name)}</span>}
                     </div>
                     <div>
                       <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)', lineHeight: 1.3 }}>

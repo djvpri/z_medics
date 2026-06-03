@@ -146,17 +146,23 @@ export default function Sidebar() {
 }
 
 function UserFooter() {
-  const [user, setUser] = useState<{ name: string; email: string; initials: string } | null>(null)
+  const [user, setUser] = useState<{ name: string; email: string; initials: string; avatarUrl?: string | null } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     import('@/lib/supabase/client').then(({ createClient }) => {
       const supabase = createClient()
-      supabase.auth.getUser().then(({ data: { user } }) => {
+      supabase.auth.getUser().then(async ({ data: { user } }) => {
         if (user) {
           const name = user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'Dokter'
           const initials = name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
-          setUser({ name, email: user.email ?? '', initials })
+          const { data: prac } = await supabase.from('practitioners').select('name, avatar_url').eq('id', user.id).single()
+          setUser({
+            name: prac?.name ?? name,
+            email: user.email ?? '',
+            initials,
+            avatarUrl: prac?.avatar_url ?? null,
+          })
         }
       })
     })
@@ -172,8 +178,10 @@ function UserFooter() {
 
   return (
     <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg group" style={{ transition: 'background 0.15s' }}>
-      <div className="flex items-center justify-center rounded-full flex-shrink-0" style={{ width: 30, height: 30, background: 'var(--accent)', fontSize: 12, fontWeight: 500, color: '#F5F0E8' }}>
-        {user?.initials ?? 'DR'}
+      <div className="flex items-center justify-center rounded-full flex-shrink-0 overflow-hidden" style={{ width: 30, height: 30, background: 'var(--accent)', fontSize: 12, fontWeight: 500, color: '#F5F0E8' }}>
+        {user?.avatarUrl
+          ? <img src={user.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : (user?.initials ?? 'DR')}
       </div>
       <div className="flex-1 min-w-0">
         <div style={{ fontSize: 12, color: 'rgba(245,240,232,0.85)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

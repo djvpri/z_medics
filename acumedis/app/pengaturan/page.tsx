@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
+import AvatarUploader from '@/components/ui/AvatarUploader'
 
 const PROVINCES = [
   'Aceh','Sumatera Utara','Sumatera Barat','Riau','Jambi','Sumatera Selatan',
@@ -22,7 +23,7 @@ const inp: React.CSSProperties = {
 export default function PengaturanPage() {
   const [form, setForm] = useState({
     name: '', clinic_name: '', specialty: 'Akupuntur & TCM', city: '', province: '',
-    public_address: '', description: '', phone_public: '', is_listed: false,
+    public_address: '', description: '', phone_public: '', is_listed: false, avatar_url: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -40,6 +41,7 @@ export default function PengaturanPage() {
         setForm({
           name: data.name ?? '',
           clinic_name: data.clinic_name ?? '',
+          avatar_url: data.avatar_url ?? '',
           specialty: data.specialty ?? 'Akupuntur & TCM',
           city: data.city ?? '',
           province: data.province ?? '',
@@ -118,6 +120,14 @@ export default function PengaturanPage() {
               <p style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>Ditampilkan kepada calon pasien</p>
             </div>
             <div className="p-5 space-y-4">
+              {/* Avatar */}
+              <AvatarUploader
+                currentUrl={form.avatar_url || null}
+                name={form.name || 'DR'}
+                size={80}
+                onUpload={(url) => set('avatar_url', url)}
+              />
+
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Nama Praktisi / Dokter</label>
                 <input type="text" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Dr. ..." style={inp} onFocus={fo} onBlur={bl} />
