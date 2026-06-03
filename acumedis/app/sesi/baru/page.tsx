@@ -267,7 +267,7 @@ function SesiBaruForm() {
       />
 
       <form id="sesi-form" onSubmit={handleSubmit}>
-        <div className="p-4 md:p-7 grid gap-4" className="grid-cols-1 lg:grid-cols-[1fr_360px]" style={{ alignItems: "start" }}>
+        <div className="p-4 md:p-7 grid gap-4 grid-cols-1 lg:grid-cols-[1fr_360px]" style={{ alignItems: "start" }}>
 
           {/* LEFT: form */}
           <div className="space-y-4">
