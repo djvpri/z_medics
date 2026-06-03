@@ -78,6 +78,19 @@ export async function getSession(id: string): Promise<Session | null> {
   return data
 }
 
+// ── Appointment requests ──────────────────────────────────────
+
+export async function getPendingRequests() {
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase
+    .from('appointment_requests')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(5)
+  return data ?? []
+}
+
 // ── Session photos ────────────────────────────────────────────
 
 export async function getLastTonguePhoto(sessionId: string) {

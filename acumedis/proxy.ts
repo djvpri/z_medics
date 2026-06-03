@@ -17,6 +17,10 @@ export async function proxy(request: NextRequest) {
 
   const isAuthPage = path === '/login' || path === '/register'
 
+  // Halaman publik — tidak perlu login
+  const isPublicPage = path === '/find' || path.startsWith('/klinik')
+  if (isPublicPage) return NextResponse.next()
+
   let supabaseResponse = NextResponse.next({ request })
   let user = null
 

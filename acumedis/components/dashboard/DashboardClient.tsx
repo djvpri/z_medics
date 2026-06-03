@@ -30,9 +30,10 @@ interface Props {
   weekAppts: any[]
   groupedByDay: Record<string, any[]>
   todayAppts: any[]
+  pendingRequests: any[]
 }
 
-export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts }: Props) {
+export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts, pendingRequests }: Props) {
   const { t, lang } = useT()
 
   const todayLabel = new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', {
@@ -184,6 +185,41 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
 
           {/* AI Panel */}
           <AIPanel />
+
+          {/* Permintaan jadwal masuk */}
+          {pendingRequests.length > 0 && (
+            <div className="rounded-[18px] overflow-hidden mt-4" style={{ background: 'var(--surface)', border: '1px solid var(--gold)' }}>
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)', background: 'var(--gold-light)' }}>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 15, color: 'var(--ink)' }}>
+                    {lang === 'id' ? '🔔 Permintaan Jadwal Masuk' : '🔔 Incoming Appointment Requests'}
+                  </h2>
+                  <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{pendingRequests.length} {lang === 'id' ? 'menunggu konfirmasi' : 'awaiting confirmation'}</p>
+                </div>
+                <Link href="/pengaturan" style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500, textDecoration: 'none' }}>
+                  {lang === 'id' ? 'Kelola →' : 'Manage →'}
+                </Link>
+              </div>
+              <div className="px-5 py-3 space-y-3">
+                {pendingRequests.map((req: any) => (
+                  <div key={req.id} style={{ paddingBottom: 12, borderBottom: '1px solid var(--border2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)' }}>{req.patient_name}</span>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'var(--gold-light)', color: 'var(--gold)' }}>
+                        {lang === 'id' ? 'Menunggu' : 'Pending'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 12, color: 'var(--ink3)' }}>
+                      {req.patient_phone}
+                      {req.preferred_date ? ` · ${new Date(req.preferred_date).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })}` : ''}
+                      {req.preferred_time ? ` ${req.preferred_time}` : ''}
+                    </p>
+                    {req.reason && <p style={{ fontSize: 12, color: 'var(--ink2)', marginTop: 2 }}>{req.reason}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
