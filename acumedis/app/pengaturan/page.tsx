@@ -98,7 +98,7 @@ export default function PengaturanPage() {
                 </p>
                 <p style={{ fontSize: 12.5, color: 'var(--ink3)' }}>
                   {form.is_listed
-                    ? 'Pasien dapat menemukan dan menghubungi klinik Anda melalui zomet-stocks.vercel.app/find'
+                    ? 'Pasien dapat menemukan dan menghubungi klinik Anda melalui z-medics.vercel.app/find'
                     : 'Aktifkan agar pasien bisa menemukan klinik Anda secara online'}
                 </p>
               </div>
@@ -173,7 +173,7 @@ export default function PengaturanPage() {
               <p style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 500, marginBottom: 4 }}>Link profil klinik Anda:</p>
               <a href={`/klinik/${practitionerId}`} target="_blank" rel="noreferrer"
                 style={{ fontSize: 13, color: 'var(--accent)', wordBreak: 'break-all' }}>
-                zomet-stocks.vercel.app/klinik/{practitionerId}
+                z-medics.vercel.app/klinik/{practitionerId}
               </a>
             </div>
           )}
