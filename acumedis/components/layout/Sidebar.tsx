@@ -66,7 +66,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed top-0 left-0 h-screen w-[220px] flex flex-col overflow-hidden z-50"
+      className="h-screen w-[220px] flex flex-col overflow-hidden"
       style={{ background: 'var(--ink)' }}
     >
       {/* Logo */}

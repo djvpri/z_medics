@@ -8,7 +8,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
-  // Tutup otomatis saat pindah halaman
   useEffect(() => { setOpen(false) }, [pathname])
 
   return (
@@ -27,27 +26,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-
-        <span style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 18, color: 'var(--ink)' }}>
-          Z Medics
-        </span>
-
+        <span style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 18, color: 'var(--ink)' }}>Z Medics</span>
         <div style={{ width: 36 }} />
       </header>
 
-      {/* ── Backdrop mobile ── */}
-      <div
-        onClick={() => setOpen(false)}
-        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-200 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        style={{ background: 'rgba(0,0,0,0.55)' }}
-      />
+      {/* ── Backdrop ── */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-      {/* ── Sidebar ──
-           Mobile: slide in/out dari kiri
-           Desktop (md+): selalu tampil, tidak bergerak  */}
-      <div className={`fixed top-0 left-0 h-screen z-50 transition-transform duration-200
-        ${open ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0`}
+      {/* ── Sidebar wrapper ──
+           AppShell mengontrol fixed + transform.
+           Sidebar sendiri tidak lagi pakai fixed.
+           Mobile: tersembunyi (-translate-x-full), muncul saat open.
+           Desktop (md+): selalu tampil (translate-x-0). */}
+      <div
+        className={`
+          fixed top-0 left-0 h-screen z-50
+          transition-transform duration-200 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0
+        `}
       >
         <Sidebar />
       </div>
