@@ -163,7 +163,7 @@ export default function LaporanPage() {
         </div>
 
         {/* Chart + Top Keluhan */}
-        <div className="grid gap-5" className="grid-cols-1 lg:grid-cols-[1fr_300px]" style={{}}>
+        <div className="grid gap-5 grid-cols-1 lg:grid-cols-[1fr_300px]">
           {/* Bar chart */}
           <div className="rounded-[18px] p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-5">
