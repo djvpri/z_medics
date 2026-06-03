@@ -59,13 +59,13 @@ export default function TambahPasienPage() {
         back="/pasien"
       />
 
-      <div className="p-7">
+      <div className="p-4 md:p-7">
         <form onSubmit={handleSubmit}>
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
               <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.patient.patientInfo}</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label style={labelStyle}>{t.patient.fullName} <span style={{ color: 'var(--red)' }}>*</span></label>

@@ -90,7 +90,7 @@ export default function JadwalBaruPage() {
   return (
     <>
       <Topbar title="Jadwal Baru" back="/jadwal" />
-      <div className="p-7">
+      <div className="p-4 md:p-7">
         <form onSubmit={handleSubmit} className="max-w-lg">
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
@@ -100,7 +100,7 @@ export default function JadwalBaruPage() {
               </p>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               {/* Pasien */}
               <div>
                 <label style={labelStyle}>Pasien <span style={{ color: 'var(--red)' }}>*</span></label>

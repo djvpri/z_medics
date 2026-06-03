@@ -71,7 +71,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         title={t.dashboard.title}
         actions={
           <div className="flex items-center gap-3">
-            <span style={{ fontSize: 13, color: 'var(--ink3)' }}>{todayLabel}</span>
+            <span className="hidden md:inline" style={{ fontSize: 13, color: "var(--ink3)" }}>{todayLabel}</span>
             <Link href="/jadwal/baru" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
               + {lang === 'id' ? 'Sesi Baru' : 'New Session'}
             </Link>
@@ -79,7 +79,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         }
       />
 
-      <div className="p-7 flex-1 space-y-5">
+      <div className="p-4 md:p-7 flex-1 space-y-5">
         {/* Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {cards.map((card) => (

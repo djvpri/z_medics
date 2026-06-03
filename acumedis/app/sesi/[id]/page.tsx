@@ -348,7 +348,7 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
     return (
       <>
         <Topbar title="Detail Sesi" back="/sesi" />
-        <div className="p-7 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat data sesi...</div>
+        <div className="p-4 md:p-7 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat data sesi...</div>
       </>
     )
   }
@@ -371,7 +371,7 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
         }
       />
 
-      <div className="p-6 flex-1 space-y-4">
+      <div className="p-4 md:p-6 flex-1 space-y-4">
 
         {/* Info Umum */}
         <div className="bg-white rounded-xl border border-gray-100 p-5">

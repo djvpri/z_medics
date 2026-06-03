@@ -31,7 +31,7 @@ export default function SessionListClient({ sessions }: { sessions: any[] }) {
           </Link>
         }
       />
-      <div className="p-6 flex-1">
+      <div className="p-4 md:p-6 flex-1">
         <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           {sessions.length === 0 ? (
             <div className="py-16 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>

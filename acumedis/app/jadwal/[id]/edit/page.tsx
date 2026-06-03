@@ -88,7 +88,7 @@ export default function EditJadwalPage({ params }: { params: Promise<{ id: strin
     return (
       <>
         <Topbar title="Edit Jadwal" back="/jadwal" />
-        <div className="p-7 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat data...</div>
+        <div className="p-4 md:p-7 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat data...</div>
       </>
     )
   }
@@ -96,13 +96,13 @@ export default function EditJadwalPage({ params }: { params: Promise<{ id: strin
   return (
     <>
       <Topbar title="Edit Jadwal" back="/jadwal" />
-      <div className="p-7">
+      <div className="p-4 md:p-7">
         <form onSubmit={handleSubmit} className="max-w-lg">
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
               <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Edit Jadwal Sesi</h2>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div>
                 <label style={labelStyle}>Pasien <span style={{ color: 'var(--red)' }}>*</span></label>
                 <select value={form.patient_id} onChange={e => set('patient_id', e.target.value)} required style={selectStyle} onFocus={fo} onBlur={bl}>

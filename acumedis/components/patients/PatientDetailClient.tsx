@@ -80,9 +80,9 @@ export default function PatientDetailClient({ patient, sessions, tongueAI, tongu
         }
       />
 
-      <div className="p-7 space-y-5">
+      <div className="p-4 md:p-7 space-y-5">
         {/* Patient header */}
-        <div className="rounded-[18px] p-6 flex items-center gap-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div className="rounded-[18px] p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--accent)', color: '#F5F0E8', fontFamily: 'var(--font-dm-serif)', fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             {initials}
           </div>

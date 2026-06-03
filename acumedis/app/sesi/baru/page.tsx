@@ -267,7 +267,7 @@ function SesiBaruForm() {
       />
 
       <form id="sesi-form" onSubmit={handleSubmit}>
-        <div className="p-7 grid gap-4" style={{ gridTemplateColumns: '1fr 360px', alignItems: 'start' }}>
+        <div className="p-4 md:p-7 grid gap-4" className="grid-cols-1 lg:grid-cols-[1fr_360px]" style={{ alignItems: "start" }}>
 
           {/* LEFT: form */}
           <div className="space-y-4">
@@ -277,7 +277,7 @@ function SesiBaruForm() {
               <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
                 <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.sessionInfo}</h2>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-4 md:p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label style={labelStyle}>{t.session.patientLabel}</label>
@@ -360,7 +360,7 @@ function SesiBaruForm() {
                 <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.acupuncturePoints}</h2>
                 <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{t.session.pickOrType}</span>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-4 md:p-6 space-y-4">
                 <div>
                   <label style={labelStyle}>{t.session.meridian}</label>
                   <div className="grid grid-cols-6 gap-1.5">
@@ -399,7 +399,7 @@ function SesiBaruForm() {
                 <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.tonguePicture}</h2>
                 <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{t.session.analyzedBy}</span>
               </div>
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <TonguePhotoUploader
                   context={form.chief_complaint || undefined}
                   onAnalysisComplete={(analysis, imgBase64) => {

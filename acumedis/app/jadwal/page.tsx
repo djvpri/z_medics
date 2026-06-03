@@ -214,7 +214,7 @@ export default function JadwalPage() {
         }
       />
 
-      <div className="p-7 space-y-5">
+      <div className="p-4 md:p-7 space-y-5">
         {/* Week navigator */}
         <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border2)' }}>

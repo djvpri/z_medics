@@ -90,7 +90,7 @@ export default function PasienPage() {
               placeholder={t.patient.searchPlaceholder}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ padding: '7px 14px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'var(--font-dm-sans)', fontSize: 13, background: 'var(--surface)', color: 'var(--ink)', outline: 'none', width: 200 }}
+              style={{ padding: '7px 14px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'var(--font-dm-sans)', fontSize: 13, background: 'var(--surface)', color: 'var(--ink)', outline: "none", width: "100%", maxWidth: 200 }}
             />
             <Link href="/pasien/baru" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', whiteSpace: 'nowrap' }}>
               {t.patient.addPatient}
@@ -99,7 +99,7 @@ export default function PasienPage() {
         }
       />
 
-      <div className="p-7">
+      <div className="p-4 md:p-7">
         <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)', overflowX: 'auto' }}>
           {loading ? (
             <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>{t.common.loading}</div>

@@ -84,7 +84,7 @@ export default function EditSesiPage({ params }: { params: Promise<{ id: string 
     return (
       <>
         <Topbar title="Edit Sesi" back={`/sesi/${id}`} />
-        <div className="p-7 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>Memuat data...</div>
+        <div className="p-4 md:p-7 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>Memuat data...</div>
       </>
     )
   }
@@ -95,14 +95,14 @@ export default function EditSesiPage({ params }: { params: Promise<{ id: string 
   return (
     <>
       <Topbar title="Edit Sesi" back={`/sesi/${id}`} />
-      <div className="p-7">
+      <div className="p-4 md:p-7">
         <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
 
           <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
               <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Informasi Sesi</h2>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label style={labelStyle}>Pasien</label>
