@@ -196,7 +196,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
                   </h2>
                   <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{pendingRequests.length} {lang === 'id' ? 'menunggu konfirmasi' : 'awaiting confirmation'}</p>
                 </div>
-                <Link href="/pengaturan" style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500, textDecoration: 'none' }}>
+                <Link href="/jadwal/permintaan" style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 500, textDecoration: 'none' }}>
                   {lang === 'id' ? 'Kelola →' : 'Manage →'}
                 </Link>
               </div>
