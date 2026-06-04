@@ -144,7 +144,7 @@ export async function getWeekAppointments() {
 
   const { data } = await supabase
     .from('appointments')
-    .select('id, scheduled_at, duration_minutes, reason, status, session_id, patient:patients(id, name)')
+    .select('id, scheduled_at, duration_minutes, reason, status, session_id, external_name, external_phone, patient:patients(id, name)')
     .gte('scheduled_at', today.toISOString())
     .lte('scheduled_at', end.toISOString())
     .neq('status', 'cancelled')

@@ -143,7 +143,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
                       {(appts as any[]).map((appt: any, i: number) => {
                         const status = getStatus(appt.scheduled_at, appt.status)
                         const badge = STATUS_BADGE[status]
-                        const name = appt.patient?.name ?? (lang === 'id' ? 'Pasien' : 'Patient')
+                        const name = appt.patient?.name ?? (appt as any).external_name ?? (lang === 'id' ? 'Pasien Baru' : 'New Patient')
                         const col = AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]
                         const time = new Date(appt.scheduled_at).toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' })
 
