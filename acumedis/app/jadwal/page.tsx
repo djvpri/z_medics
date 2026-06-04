@@ -65,7 +65,7 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
   const router = useRouter()
   const status = getStatus(appt.scheduled_at, appt.status)
   const cfg = STATUS_CONFIG[status]
-  const name = appt.patient?.name ?? 'Pasien'
+  const name = appt.patient?.name ?? (appt as any).external_name ?? (lang === 'id' ? 'Pasien Baru' : 'New Patient')
   const col = AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]
   const initials = getInitials(name)
   const time = new Date(appt.scheduled_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
@@ -96,6 +96,7 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
         <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>
           {time} · {appt.duration_minutes} mnt
           {appt.reason ? ` · ${appt.reason}` : ''}
+          {!(appt.patient) && (appt as any).external_phone ? ` · 📞 ${(appt as any).external_phone}` : ''}
         </div>
       </div>
 
@@ -170,7 +171,7 @@ export default function JadwalPage() {
 
       const { data } = await supabase
         .from('appointments')
-        .select('*, patient:patients(name)')
+        .select('*, patient:patients(name), external_name, external_phone')
         .gte('scheduled_at', weekStart.toISOString())
         .lte('scheduled_at', weekEnd.toISOString())
         .order('scheduled_at')

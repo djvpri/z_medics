@@ -88,18 +88,21 @@ export default function PermintaanPage() {
 
     const scheduledAt = new Date(`${schedForm.date}T${schedForm.time}`).toISOString()
 
-    // Buat appointment
-    if (patient?.id) {
-      await supabase.from('appointments').insert({
-        practitioner_id: user.id,
-        patient_id: patient.id,
-        scheduled_at: scheduledAt,
-        reason: req.reason,
-        status: 'scheduled',
-        duration_minutes: schedForm.duration,
-        notes: schedForm.notes || null,
-      })
-    }
+    // Buat appointment — pakai patient_id jika ada, fallback ke data eksternal
+    await supabase.from('appointments').insert({
+      practitioner_id: user.id,
+      patient_id: patient?.id ?? null,
+      scheduled_at: scheduledAt,
+      reason: req.reason,
+      status: 'scheduled',
+      duration_minutes: schedForm.duration,
+      notes: schedForm.notes || null,
+      // Simpan data pasien eksternal jika belum terdaftar
+      ...(patient?.id ? {} : {
+        external_name: req.patient_name,
+        external_phone: req.patient_phone,
+      }),
+    })
 
     // Update status request
     await supabase.from('appointment_requests')
