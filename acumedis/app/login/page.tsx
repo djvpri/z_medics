@@ -73,24 +73,43 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 6 }}>{t.auth.email}</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="dokter@klinik.com" required autoComplete="email" style={inputStyle}
-                onFocus={e => (e.target.style.borderColor = 'var(--accent2)')} onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: error ? 'var(--red)' : 'var(--ink2)', marginBottom: 6 }}>{t.auth.email}</label>
+              <input
+                type="email" value={email} onChange={e => { setEmail(e.target.value); setError('') }}
+                placeholder="dokter@klinik.com" required autoComplete="email"
+                style={{ ...inputStyle, borderColor: error ? 'var(--red)' : 'var(--border)' }}
+                onFocus={e => (e.target.style.borderColor = error ? 'var(--red)' : 'var(--accent2)')}
+                onBlur={e => (e.target.style.borderColor = error ? 'var(--red)' : 'var(--border)')}
+              />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink2)' }}>{t.auth.password}</label>
+                <label style={{ fontSize: 12, fontWeight: 500, color: error ? 'var(--red)' : 'var(--ink2)' }}>{t.auth.password}</label>
                 <Link href="/forgot-password" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
                   {lang === 'id' ? 'Lupa password?' : 'Forgot password?'}
                 </Link>
               </div>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="current-password" style={inputStyle}
-                onFocus={e => (e.target.style.borderColor = 'var(--accent2)')} onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
+              <input
+                type="password" value={password} onChange={e => { setPassword(e.target.value); setError('') }}
+                placeholder="••••••••" required autoComplete="current-password"
+                style={{ ...inputStyle, borderColor: error ? 'var(--red)' : 'var(--border)' }}
+                onFocus={e => (e.target.style.borderColor = error ? 'var(--red)' : 'var(--accent2)')}
+                onBlur={e => (e.target.style.borderColor = error ? 'var(--red)' : 'var(--border)')}
+              />
             </div>
 
             {error && (
-              <div className="rounded-lg p-3" style={{ background: 'var(--red-light)', fontSize: 13, color: 'var(--red)' }}>{error}</div>
+              <div className="rounded-lg p-3.5" style={{ background: 'var(--red-light)', border: '1px solid rgba(139,32,32,0.15)', fontSize: 13, color: 'var(--red)', lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                  {lang === 'id' ? '⚠ Email atau password tidak valid.' : '⚠ Invalid email or password.'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--red)', opacity: 0.8 }}>
+                  {lang === 'id'
+                    ? <>Periksa kembali yang Anda masukkan, atau <Link href="/forgot-password" style={{ color: 'var(--red)', fontWeight: 600, textDecoration: 'underline' }}>reset password</Link> jika lupa.</>
+                    : <>Please check your input, or <Link href="/forgot-password" style={{ color: 'var(--red)', fontWeight: 600, textDecoration: 'underline' }}>reset your password</Link> if you forgot it.</>}
+                </div>
+              </div>
             )}
 
             <button type="submit" disabled={loading} style={{ width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 500, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', background: loading ? 'var(--bg2)' : 'var(--accent)', color: loading ? 'var(--ink3)' : '#F5F0E8', fontFamily: 'var(--font-dm-sans)', transition: 'all 0.15s' }}>
