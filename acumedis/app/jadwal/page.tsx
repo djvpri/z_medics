@@ -51,6 +51,7 @@ interface Appointment {
   status: string
   session_id: string | null
   notes: string | null
+  queue_number: number | null
   patient: { name: string } | null
 }
 
@@ -85,8 +86,13 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
 
   return (
     <div className="py-3" style={{ borderBottom: '1px solid var(--border2)' }}>
-      {/* Baris 1: Avatar + Info + Badge */}
+      {/* Baris 1: No. Antrian + Avatar + Info + Badge */}
       <div className="flex items-center gap-3">
+        {appt.queue_number != null && (
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--accent)', color: '#F5F0E8', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'var(--font-dm-serif)' }}>
+            {appt.queue_number}
+          </div>
+        )}
         <div style={{ width: 40, height: 40, borderRadius: '50%', background: col.bg, color: col.text, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {initials}
         </div>
@@ -103,8 +109,8 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
         </span>
       </div>
 
-      {/* Baris 2: Tombol aksi (sejajar dengan info) */}
-      <div className="flex items-center gap-1.5 flex-wrap mt-2" style={{ paddingLeft: 52 }}>
+      {/* Baris 2: Tombol aksi */}
+      <div className="flex items-center gap-1.5 flex-wrap mt-2" style={{ paddingLeft: appt.queue_number != null ? 88 : 52 }}>
         {(status === 'segera' || status === 'akan') && appt.status === 'scheduled' && (
           <Link
             href={`/sesi/baru?pasien=${appt.patient_id}&alasan=${encodeURIComponent(appt.reason ?? '')}&jadwal=${appt.id}`}

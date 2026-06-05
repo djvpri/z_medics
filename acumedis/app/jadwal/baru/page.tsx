@@ -68,6 +68,19 @@ export default function JadwalBaruPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const practitioner_id = user?.id ?? process.env.NEXT_PUBLIC_DEV_PRACTITIONER_ID ?? '00000000-0000-0000-0000-000000000001'
 
+    // Hitung nomor antrian untuk hari yang sama
+    const localDate = form.scheduled_at.split('T')[0]
+    const dayStart = new Date(localDate + 'T00:00:00').toISOString()
+    const dayEnd = new Date(localDate + 'T23:59:59').toISOString()
+    const { count } = await supabase
+      .from('appointments')
+      .select('*', { count: 'exact', head: true })
+      .eq('practitioner_id', practitioner_id)
+      .neq('status', 'cancelled')
+      .gte('scheduled_at', dayStart)
+      .lte('scheduled_at', dayEnd)
+    const queue_number = (count ?? 0) + 1
+
     const { error: err } = await supabase.from('appointments').insert({
       patient_id: form.patient_id,
       scheduled_at: new Date(form.scheduled_at).toISOString(),
@@ -76,6 +89,7 @@ export default function JadwalBaruPage() {
       notes: form.notes || null,
       practitioner_id,
       status: 'scheduled',
+      queue_number,
     })
 
     setLoading(false)
