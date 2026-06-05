@@ -84,58 +84,45 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
   }
 
   return (
-    <div className="flex items-center gap-3 py-3" style={{ borderBottom: '1px solid var(--border2)' }}>
-      {/* Avatar */}
-      <div style={{ width: 40, height: 40, borderRadius: '50%', background: col.bg, color: col.text, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        {initials}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)' }}>{name}</div>
-        <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>
-          {time} · {appt.duration_minutes} mnt
-          {appt.reason ? ` · ${appt.reason}` : ''}
-          {!(appt.patient) && (appt as any).external_phone ? ` · 📞 ${(appt as any).external_phone}` : ''}
+    <div className="py-3" style={{ borderBottom: '1px solid var(--border2)' }}>
+      {/* Baris 1: Avatar + Info + Badge */}
+      <div className="flex items-center gap-3">
+        <div style={{ width: 40, height: 40, borderRadius: '50%', background: col.bg, color: col.text, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          {initials}
         </div>
+        <div className="flex-1 min-w-0">
+          <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)' }}>{name}</div>
+          <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>
+            {time} · {appt.duration_minutes} mnt
+            {appt.reason ? ` · ${appt.reason}` : ''}
+            {!(appt.patient) && (appt as any).external_phone ? ` · 📞 ${(appt as any).external_phone}` : ''}
+          </div>
+        </div>
+        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {cfg.label}
+        </span>
       </div>
 
-      {/* Status badge */}
-      <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
-        {cfg.label}
-      </span>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1.5">
-        {/* Mulai Sesi — hanya saat scheduled/segera */}
+      {/* Baris 2: Tombol aksi (sejajar dengan info) */}
+      <div className="flex items-center gap-1.5 flex-wrap mt-2" style={{ paddingLeft: 52 }}>
         {(status === 'segera' || status === 'akan') && appt.status === 'scheduled' && (
           <Link
             href={`/sesi/baru?pasien=${appt.patient_id}&alasan=${encodeURIComponent(appt.reason ?? '')}&jadwal=${appt.id}`}
-            style={{
-              padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 500,
-              background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none',
-              fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap',
-            }}
+            style={{ padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
           >
             Mulai Sesi
           </Link>
         )}
-
-        {/* Jika sudah ada session_id — lihat sesi */}
         {appt.session_id && (
           <Link href={`/sesi/${appt.session_id}`} style={{ padding: '5px 10px', borderRadius: 7, fontSize: 12, border: '1px solid var(--border)', color: 'var(--ink2)', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
             Lihat Sesi
           </Link>
         )}
-
-        {/* Edit jadwal */}
         {appt.status === 'scheduled' && (
           <Link href={`/jadwal/${appt.id}/edit`} style={{ padding: '5px 10px', borderRadius: 7, fontSize: 12, border: '1px solid var(--border)', color: 'var(--ink2)', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
             Edit
           </Link>
         )}
-
-        {/* Batal */}
         {appt.status === 'scheduled' && status !== 'selesai' && (
           <button
             onClick={cancelAppointment}
@@ -224,7 +211,7 @@ export default function JadwalPage() {
             <button onClick={nextWeek} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--ink2)', fontFamily: 'var(--font-dm-sans)' }}>→</button>
           </div>
 
-          <div className="grid grid-cols-7 p-3 gap-1.5">
+          <div className="grid grid-cols-7 p-2 md:p-3 gap-1 md:gap-1.5">
             {weekDays.map((day, i) => {
               const isToday = day.toDateString() === today.toDateString()
               const isSelected = day.toDateString() === selectedStr

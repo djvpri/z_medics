@@ -38,7 +38,8 @@ export default function SessionListClient({ sessions }: { sessions: any[] }) {
               {t.common.noData}
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table className="w-full text-sm" style={{ minWidth: 600 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border2)', background: 'var(--surface2)' }}>
                   {[t.session.date, t.session.patient, t.session.chiefComplaint, t.session.points, t.session.pain, t.session.duration].map(h => (
@@ -87,6 +88,7 @@ export default function SessionListClient({ sessions }: { sessions: any[] }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
