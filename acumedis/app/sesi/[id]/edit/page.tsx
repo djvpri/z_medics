@@ -73,6 +73,8 @@ export default function EditSesiPage({ params }: { params: Promise<{ id: string 
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       notes: form.notes || null,
       tcm_diagnosis: form.tcm_diagnosis || null,
+      fee: form.fee ? Number(form.fee) : null,
+      payment_status: form.payment_status || null,
     }).eq('id', id)
     setLoading(false)
     if (error) { alert('Gagal menyimpan: ' + error.message); return }
@@ -170,6 +172,30 @@ export default function EditSesiPage({ params }: { params: Promise<{ id: string 
               <div>
                 <label style={labelStyle}>Catatan Klinis</label>
                 <textarea value={form.notes ?? ''} onChange={e => set('notes', e.target.value)} rows={3} style={{ ...inputStyle, resize: 'none' }} onFocus={fo} onBlur={bl} />
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: '1px solid var(--border2)' }}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label style={labelStyle}>Biaya Terapi (Rp)</label>
+                    <input type="number" min={0} step={1000} value={form.fee ?? ''} onChange={e => set('fee', e.target.value)} placeholder="150000" style={inputStyle} onFocus={fo} onBlur={bl} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Status Pembayaran</label>
+                    <div className="flex gap-1.5">
+                      {([['paid', 'Lunas'], ['unpaid', 'Belum'], ['partial', 'Sebagian']] as const).map(([val, label]) => {
+                        const active = form.payment_status === val
+                        const colors: Record<string, string> = { paid: 'var(--accent)', unpaid: 'var(--red)', partial: 'var(--gold)' }
+                        return (
+                          <button key={val} type="button" onClick={() => set('payment_status', val)}
+                            style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s', fontFamily: 'var(--font-dm-sans)', borderColor: active ? colors[val] : 'var(--border)', background: active ? (val === 'paid' ? 'var(--accent-light)' : val === 'unpaid' ? 'var(--red-light)' : 'var(--gold-light)') : 'transparent', color: active ? colors[val] : 'var(--ink3)' }}>
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
