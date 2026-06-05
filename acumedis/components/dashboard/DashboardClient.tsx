@@ -25,8 +25,14 @@ function getStatus(scheduledAt: string, apptStatus: string): 'selesai' | 'segera
   return 'akan'
 }
 
+function formatRp(val: number) {
+  if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1).replace('.0', '')} jt`
+  if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)} rb`
+  return `Rp ${val.toLocaleString('id-ID')}`
+}
+
 interface Props {
-  stats: { totalPatients: number; totalSessions: number; todaySessions: number; newPatients: number; topPoint: { name: string; count: number } | null } | null
+  stats: { totalPatients: number; totalSessions: number; todaySessions: number; newPatients: number; monthIncome: number } | null
   weekAppts: any[]
   groupedByDay: Record<string, any[]>
   todayAppts: any[]
@@ -59,9 +65,10 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         : t.common.today,
     },
     {
-      label: lang === 'id' ? 'Titik Terpopuler' : 'Top Point',
-      value: stats?.topPoint?.name ?? '—',
-      sub: stats?.topPoint ? `${stats.topPoint.count}× ${lang === 'id' ? 'digunakan' : 'used'}` : (lang === 'id' ? 'Belum ada sesi' : 'No sessions yet'),
+      label: lang === 'id' ? 'Pendapatan Bulan Ini' : 'Monthly Income',
+      value: stats?.monthIncome != null ? formatRp(stats.monthIncome) : '—',
+      sub: lang === 'id' ? 'Sesi yang sudah lunas' : 'Paid sessions',
+      accent: true,
     },
     { label: t.dashboard.totalSessions, value: stats?.totalSessions ?? '—', trend: t.dashboard.allTime, up: true },
   ]
@@ -84,9 +91,9 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         {/* Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {cards.map((card) => (
-            <div key={card.label} className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div key={card.label} className="rounded-xl p-5" style={{ background: 'var(--surface)', border: `1px solid ${(card as any).accent ? 'var(--accent)' : 'var(--border)'}` }}>
               <p style={{ fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{card.label}</p>
-              <p style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 28, color: 'var(--ink)', lineHeight: 1 }}>{card.value}</p>
+              <p style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 26, color: (card as any).accent ? 'var(--accent)' : 'var(--ink)', lineHeight: 1 }}>{card.value}</p>
               {card.trend && (
                 <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
                   {card.trend}
