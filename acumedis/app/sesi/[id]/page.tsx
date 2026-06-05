@@ -367,6 +367,11 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
             <Link href={`/sesi/${sesi.id}/edit`} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--ink2)', textDecoration: 'none', fontFamily: 'var(--font-dm-serif)' }}>
               Edit
             </Link>
+            {sesi.fee && (
+              <Link href={`/kwitansi/${sesi.id}`} target="_blank" style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: 'none', background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-serif)', whiteSpace: 'nowrap' }}>
+                🖨 Kwitansi
+              </Link>
+            )}
           </div>
         }
       />
