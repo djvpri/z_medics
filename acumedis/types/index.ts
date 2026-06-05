@@ -36,6 +36,7 @@ export interface Patient {
   phone?: string
   email?: string
   address?: string
+  avatar_url?: string
   created_at: string
   // computed
   age?: number
@@ -95,6 +96,7 @@ export interface NewPatientForm {
   phone?: string
   email?: string
   address?: string
+  avatar_url?: string
 }
 
 export interface NewSessionForm {

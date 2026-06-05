@@ -7,6 +7,7 @@ import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { NewPatientForm } from '@/types'
 import { useT } from '@/contexts/LanguageContext'
+import AvatarUploader from '@/components/ui/AvatarUploader'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -32,7 +33,7 @@ const labelStyle: React.CSSProperties = {
 export default function TambahPasienPage() {
   const router = useRouter()
   const { t } = useT()
-  const [form, setForm] = useState<NewPatientForm>({ name: '', gender: undefined, birth_date: '', phone: '', email: '', address: '' })
+  const [form, setForm] = useState<NewPatientForm>({ name: '', gender: undefined, birth_date: '', phone: '', email: '', address: '', avatar_url: '' })
   const [loading, setLoading] = useState(false)
 
   function set(field: keyof NewPatientForm, value: string) {
@@ -66,6 +67,15 @@ export default function TambahPasienPage() {
               <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.patient.patientInfo}</h2>
             </div>
             <div className="p-4 md:p-6">
+              <div className="mb-5">
+                <AvatarUploader
+                  currentUrl={form.avatar_url || null}
+                  name={form.name || '?'}
+                  size={72}
+                  filePrefix="patient"
+                  onUpload={(url) => setForm(prev => ({ ...prev, avatar_url: url }))}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label style={labelStyle}>{t.patient.fullName} <span style={{ color: 'var(--red)' }}>*</span></label>

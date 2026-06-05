@@ -8,6 +8,7 @@ interface Props {
   name: string
   size?: number
   onUpload: (url: string) => void
+  filePrefix?: string
 }
 
 function getInitials(name: string) {
@@ -38,7 +39,7 @@ async function compressImage(dataUrl: string, maxSizeKb = 400): Promise<string> 
   })
 }
 
-export default function AvatarUploader({ currentUrl, name, size = 80, onUpload }: Props) {
+export default function AvatarUploader({ currentUrl, name, size = 80, onUpload, filePrefix }: Props) {
   const [preview, setPreview] = useState<string | null>(currentUrl ?? null)
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -68,7 +69,8 @@ export default function AvatarUploader({ currentUrl, name, size = 80, onUpload }
 
         const byteArr = Uint8Array.from(atob(compressed.split(',')[1]), c => c.charCodeAt(0))
         const blob = new Blob([byteArr], { type: 'image/jpeg' })
-        const filename = `${user.id}-${Date.now()}.jpg`
+        const prefix = filePrefix ?? user.id
+        const filename = `${prefix}-${Date.now()}.jpg`
 
         const { data: uploadData, error } = await supabase.storage
           .from('avatars')
@@ -77,9 +79,6 @@ export default function AvatarUploader({ currentUrl, name, size = 80, onUpload }
         if (error) { alert('Gagal upload: ' + error.message); setUploading(false); return }
 
         const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(uploadData.path)
-
-        // Simpan ke practitioners
-        await supabase.from('practitioners').update({ avatar_url: publicUrl }).eq('id', user.id)
 
         onUpload(publicUrl)
         setUploading(false)

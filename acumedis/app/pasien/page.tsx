@@ -131,8 +131,10 @@ export default function PasienPage() {
                     >
                       <td style={{ padding: '12px 20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: col.bg, color: col.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 500, flexShrink: 0 }}>
-                            {getInitials(p.name)}
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: col.bg, color: col.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 500, flexShrink: 0, overflow: 'hidden' }}>
+                            {p.avatar_url
+                              ? <img src={p.avatar_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : getInitials(p.name)}
                           </div>
                           <div>
                             <div style={{ fontWeight: 500, color: 'var(--ink)' }}>{p.name}</div>

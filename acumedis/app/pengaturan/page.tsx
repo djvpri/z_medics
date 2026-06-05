@@ -72,6 +72,7 @@ export default function PengaturanPage() {
       description: form.description || null,
       phone_public: form.phone_public || null,
       is_listed: form.is_listed,
+      avatar_url: form.avatar_url || null,
     }).eq('id', practitionerId)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 3000)

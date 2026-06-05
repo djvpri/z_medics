@@ -7,6 +7,7 @@ import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { mockPatients } from '@/lib/mock-data'
 import { NewPatientForm, TongueColor } from '@/types'
+import AvatarUploader from '@/components/ui/AvatarUploader'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 8,
@@ -20,7 +21,7 @@ const labelStyle: React.CSSProperties = {
 export default function EditPasienPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const [form, setForm] = useState<NewPatientForm>({ name: '', gender: undefined, birth_date: '', phone: '', email: '', address: '' })
+  const [form, setForm] = useState<NewPatientForm>({ name: '', gender: undefined, birth_date: '', phone: '', email: '', address: '', avatar_url: '' })
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
 
@@ -30,7 +31,7 @@ export default function EditPasienPage({ params }: { params: Promise<{ id: strin
         const supabase = createClient()
         const { data } = await supabase.from('patients').select('*').eq('id', id).single()
         if (data) {
-          setForm({ name: data.name, gender: data.gender, birth_date: data.birth_date ?? '', phone: data.phone ?? '', email: data.email ?? '', address: data.address ?? '' })
+          setForm({ name: data.name, gender: data.gender, birth_date: data.birth_date ?? '', phone: data.phone ?? '', email: data.email ?? '', address: data.address ?? '', avatar_url: data.avatar_url ?? '' })
         } else {
           // fallback mock
           const mock = mockPatients.find(p => p.id === id)
@@ -81,6 +82,13 @@ export default function EditPasienPage({ params }: { params: Promise<{ id: strin
               <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Informasi Pasien</h2>
             </div>
             <div className="p-4 md:p-6 space-y-4">
+              <AvatarUploader
+                currentUrl={form.avatar_url || null}
+                name={form.name || '?'}
+                size={72}
+                filePrefix={`patient-${id}`}
+                onUpload={(url) => setForm(prev => ({ ...prev, avatar_url: url }))}
+              />
               <div>
                 <label style={labelStyle}>Nama Lengkap <span style={{ color: 'var(--red)' }}>*</span></label>
                 <input type="text" value={form.name} onChange={e => set('name', e.target.value)} required style={inputStyle}

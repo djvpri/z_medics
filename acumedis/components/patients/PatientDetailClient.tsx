@@ -83,8 +83,10 @@ export default function PatientDetailClient({ patient, sessions, tongueAI, tongu
       <div className="p-4 md:p-7 space-y-5">
         {/* Patient header */}
         <div className="rounded-[18px] p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--accent)', color: '#F5F0E8', fontFamily: 'var(--font-dm-serif)', fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            {initials}
+          <div style={{ width: 60, height: 60, borderRadius: '50%', background: col.bg, color: col.text, fontFamily: 'var(--font-dm-serif)', fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '2px solid var(--border)' }}>
+            {patient.avatar_url
+              ? <img src={patient.avatar_url} alt={patient.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : initials}
           </div>
           <div className="flex-1">
             <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 22, color: 'var(--ink)' }}>{patient.name}</div>
