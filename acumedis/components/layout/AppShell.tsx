@@ -3,11 +3,23 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Sidebar from './Sidebar'
+import { useT } from '@/contexts/LanguageContext'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
+  const { setCurrency } = useT()
+
+  // Load currency dari Supabase saat login
+  useEffect(() => {
+    createClient().auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data } = await createClient().from('practitioners').select('currency').eq('id', user.id).single()
+      if (data?.currency) setCurrency(data.currency)
+    })
+  }, [])
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)

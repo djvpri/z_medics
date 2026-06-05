@@ -2,14 +2,13 @@
 
 import { useState, useEffect, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { formatMoney } from '@/lib/formatMoney'
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function formatRp(val: number) {
-  return 'Rp ' + val.toLocaleString('id-ID')
-}
+
 
 const payLabel: Record<string, string> = {
   paid: 'LUNAS', unpaid: 'BELUM DIBAYAR', partial: 'SEBAGIAN',
@@ -19,6 +18,7 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
   const { id } = use(params)
   const [sesi, setSesi] = useState<any>(null)
   const [klinik, setKlinik] = useState<any>(null)
+  const [currency, setCurrency] = useState('IDR')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -32,10 +32,11 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
       if (user) {
         const { data: klinikData } = await supabase
           .from('practitioners')
-          .select('name, clinic_name, public_address, phone_public, city, avatar_url')
+          .select('name, clinic_name, public_address, phone_public, city, avatar_url, currency')
           .eq('id', sesiData?.practitioner_id ?? user.id)
           .single()
         setKlinik(klinikData)
+        if (klinikData?.currency) setCurrency(klinikData.currency)
       }
       setLoading(false)
     }
@@ -176,7 +177,7 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
             <div>
               <div style={{ fontSize: 10, color: '#9C9389', marginBottom: 3 }}>Total Biaya</div>
               <div style={{ fontFamily: 'serif', fontSize: 24, color: '#1C2B1F' }}>
-                {sesi.fee ? formatRp(sesi.fee) : '—'}
+                {sesi.fee ? formatMoney(sesi.fee, currency) : '—'}
               </div>
             </div>
             {sesi.payment_status && (

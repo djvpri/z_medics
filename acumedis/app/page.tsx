@@ -21,38 +21,38 @@ export default function LandingPage() {
 
   const copy = {
     nav: { find: id ? 'Cari Klinik' : 'Find Clinic', login: id ? 'Login Klinik' : 'Clinic Login' },
-    badge: id ? 'Platform Rekam Medis Akupuntur & TCM' : 'Acupuncture & TCM Medical Record Platform',
-    hero: id ? 'Temukan Klinik Akupuntur & TCM Terpercaya' : 'Find Trusted Acupuncture & TCM Clinics',
+    badge: id ? 'Platform Rekam Medis Akupuntur & TCM Global' : 'Global Acupuncture & TCM Medical Record Platform',
+    hero: id ? 'Temukan Klinik Akupuntur & TCM Terpercaya di Seluruh Dunia' : 'Find Trusted Acupuncture & TCM Clinics Worldwide',
     heroSub: id
-      ? 'Direktori klinik akupuntur dan TCM di seluruh Indonesia. Cari berdasarkan kota, baca profil, dan minta jadwal langsung.'
-      : 'Directory of acupuncture and TCM clinics across Indonesia. Search by city, read profiles, and request appointments.',
+      ? 'Direktori klinik akupuntur dan TCM dari berbagai negara. Cari berdasarkan negara dan kota, baca profil, dan minta jadwal langsung.'
+      : 'Directory of acupuncture and TCM clinics from around the world. Search by country and city, read profiles, and request appointments.',
     ctaFind: id ? 'Cari Klinik Terdekat →' : 'Find Nearest Clinic →',
     ctaRegister: id ? 'Daftarkan Klinik Saya' : 'Register My Clinic',
     stats: [
       { value: '100%', label: id ? 'Gratis untuk pasien' : 'Free for patients' },
       { value: 'AI', label: id ? 'Analisis foto lidah' : 'Tongue photo analysis' },
       { value: 'TCM', label: id ? 'Rekam medis digital' : 'Digital medical record' },
-      { value: '🌿', label: id ? 'Akupuntur & herbal' : 'Acupuncture & herbal' },
+      { value: '🌍', label: id ? 'Multi-negara & mata uang' : 'Multi-country & currency' },
     ],
     howTitle: id ? 'Cara Menemukan Klinik' : 'How to Find a Clinic',
-    howSub: id ? '3 langkah mudah untuk pasien' : '3 easy steps for patients',
+    howSub: id ? '3 langkah mudah untuk pasien di seluruh dunia' : '3 easy steps for patients worldwide',
     steps: id ? [
-      { step: '01', title: 'Cari berdasarkan kota', desc: 'Filter klinik di provinsi atau kota kamu. Lihat alamat, spesialisasi, dan profil lengkap.' },
+      { step: '01', title: 'Cari berdasarkan negara & kota', desc: 'Filter klinik berdasarkan negara dan kota. Lihat alamat, spesialisasi, dan profil lengkap.' },
       { step: '02', title: 'Baca profil klinik', desc: 'Lihat deskripsi klinik, spesialisasi, alamat, dan nomor kontak praktisi.' },
-      { step: '03', title: 'Minta jadwal', desc: 'Isi form permintaan. Klinik akan menghubungi kamu via WhatsApp untuk konfirmasi.' },
+      { step: '03', title: 'Minta jadwal', desc: 'Isi form permintaan. Klinik akan menghubungi kamu untuk konfirmasi.' },
     ] : [
-      { step: '01', title: 'Search by city', desc: 'Filter clinics by province or city. View addresses, specializations, and full profiles.' },
+      { step: '01', title: 'Search by country & city', desc: 'Filter clinics by country and city. View addresses, specializations, and full profiles.' },
       { step: '02', title: 'Read clinic profile', desc: 'View clinic description, specialization, address, and practitioner contact info.' },
-      { step: '03', title: 'Request appointment', desc: 'Fill the request form. The clinic will contact you via WhatsApp to confirm.' },
+      { step: '03', title: 'Request appointment', desc: 'Fill the request form. The clinic will contact you to confirm.' },
     ],
     forPractitioner: id ? 'Untuk Praktisi' : 'For Practitioners',
     practTitle: id ? 'Kelola Klinik Lebih Cerdas dengan AI' : 'Manage Your Clinic Smarter with AI',
     practDesc: id
-      ? 'Sistem rekam medis digital dengan analisis foto lidah Gemini Vision, rekomendasi titik akupuntur, SOAP Notes otomatis, dan booking online dari pasien.'
-      : 'Digital medical records with Gemini Vision tongue photo analysis, acupuncture point recommendations, automatic SOAP Notes, and online patient booking.',
+      ? 'Sistem rekam medis digital dengan analisis foto lidah AI, rekomendasi titik akupuntur, SOAP Notes otomatis, multi-mata uang, dan booking online dari pasien.'
+      : 'Digital medical records with AI tongue photo analysis, acupuncture point recommendations, automatic SOAP Notes, multi-currency support, and online patient booking.',
     features: id
-      ? ['Rekam medis pasien lengkap','Analisis foto lidah AI (Gemini Vision)','Rekomendasi titik akupuntur','SOAP Notes otomatis','Jadwal & manajemen pasien','Tampil di direktori klinik online']
-      : ['Complete patient medical records','AI tongue photo analysis (Gemini Vision)','Acupuncture point recommendations','Automatic SOAP Notes','Schedule & patient management','Listed in online clinic directory'],
+      ? ['Rekam medis pasien lengkap','Analisis foto lidah AI','Rekomendasi titik akupuntur','SOAP Notes otomatis','Jadwal & manajemen pasien','Multi-mata uang (IDR, USD, MYR, SGD, dll)','Tampil di direktori klinik global']
+      : ['Complete patient medical records','AI tongue photo analysis','Acupuncture point recommendations','Automatic SOAP Notes','Schedule & patient management','Multi-currency (IDR, USD, MYR, SGD, etc.)','Listed in global clinic directory'],
     ctaRegister2: id ? 'Daftar Gratis Sekarang →' : 'Sign Up Free Now →',
     ctaTitle: id ? 'Mulai Sekarang, Gratis' : 'Get Started, Free',
     ctaDesc: id ? 'Untuk praktisi akupuntur dan TCM yang ingin mengelola klinik lebih modern.' : 'For acupuncture and TCM practitioners who want to manage their clinic more efficiently.',

@@ -3,10 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-
-function formatRp(val: number) {
-  return 'Rp ' + val.toLocaleString('id-ID')
-}
+import { formatMoney } from '@/lib/formatMoney'
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -23,6 +20,7 @@ function LaporanPDFContent() {
   const [klinik, setKlinik] = useState<any>(null)
   const [sessions, setSessions] = useState<any[]>([])
   const [expenses, setExpenses] = useState<any[]>([])
+  const [currency, setCurrency] = useState('IDR')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,7 +35,7 @@ function LaporanPDFContent() {
       const end = new Date(tahun, bulan, 0).toISOString().slice(0, 10)
 
       const [{ data: klinikData }, { data: sessData }, { data: expData }] = await Promise.all([
-        supabase.from('practitioners').select('name, clinic_name, public_address, city, phone_public, avatar_url').eq('id', user.id).single(),
+        supabase.from('practitioners').select('name, clinic_name, public_address, city, phone_public, avatar_url, currency').eq('id', user.id).single(),
         supabase.from('sessions').select('session_date, fee, payment_status, chief_complaint, patient:patients(name)').gte('session_date', start).lte('session_date', end).order('session_date'),
         supabase.from('expenses').select('expense_date, amount, category, description').gte('expense_date', start).lte('expense_date', end).order('expense_date'),
       ])
@@ -45,6 +43,7 @@ function LaporanPDFContent() {
       setKlinik(klinikData)
       setSessions(sessData ?? [])
       setExpenses(expData ?? [])
+      if (klinikData?.currency) setCurrency(klinikData.currency)
       setLoading(false)
     }
     load()
@@ -130,10 +129,10 @@ function LaporanPDFContent() {
                 {/* Ringkasan */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
                   {[
-                    { label: 'Pendapatan Lunas', value: formatRp(totalIncome), color: '#2D5A3D', bg: '#E8F2EC' },
-                    { label: 'Belum Terbayar', value: formatRp(totalPending), color: '#6B6260', bg: '#F8F5F0' },
-                    { label: 'Total Pengeluaran', value: formatRp(totalExpense), color: '#8B2020', bg: '#FEECEC' },
-                    { label: 'Laba Bersih', value: formatRp(netProfit), color: netProfit >= 0 ? '#2D5A3D' : '#8B2020', bg: netProfit >= 0 ? '#E8F2EC' : '#FEECEC' },
+                    { label: 'Pendapatan Lunas', value: formatMoney(totalIncome, currency), color: '#2D5A3D', bg: '#E8F2EC' },
+                    { label: 'Belum Terbayar', value: formatMoney(totalPending, currency), color: '#6B6260', bg: '#F8F5F0' },
+                    { label: 'Total Pengeluaran', value: formatMoney(totalExpense, currency), color: '#8B2020', bg: '#FEECEC' },
+                    { label: 'Laba Bersih', value: formatMoney(netProfit, currency), color: netProfit >= 0 ? '#2D5A3D' : '#8B2020', bg: netProfit >= 0 ? '#E8F2EC' : '#FEECEC' },
                   ].map(card => (
                     <div key={card.label} style={{ background: card.bg, borderRadius: 10, padding: '14px 16px' }}>
                       <div style={{ fontSize: 10, color: card.color, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, fontWeight: 600 }}>{card.label}</div>
@@ -168,7 +167,7 @@ function LaporanPDFContent() {
                             <td style={{ whiteSpace: 'nowrap' }}>{formatDate(s.session_date)}</td>
                             <td style={{ fontWeight: 500 }}>{(s.patient as any)?.name ?? '—'}</td>
                             <td style={{ color: '#6B6260', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.chief_complaint}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 500 }}>{s.fee ? formatRp(s.fee) : '—'}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 500 }}>{s.fee ? formatMoney(s.fee, currency) : '—'}</td>
                             <td style={{ textAlign: 'center' }}>
                               {s.payment_status
                                 ? <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 600, color: PAY_COLOR[s.payment_status] ?? '#6B6260', background: s.payment_status === 'paid' ? '#E8F2EC' : s.payment_status === 'unpaid' ? '#FEECEC' : '#FFF8E1' }}>
@@ -182,7 +181,7 @@ function LaporanPDFContent() {
                       <tfoot>
                         <tr>
                           <td colSpan={4} style={{ fontWeight: 600, fontSize: 12, borderTop: '2px solid #1C2B1F', paddingTop: 8 }}>Total Lunas</td>
-                          <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, borderTop: '2px solid #1C2B1F', paddingTop: 8, color: '#2D5A3D' }}>{formatRp(totalIncome)}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, borderTop: '2px solid #1C2B1F', paddingTop: 8, color: '#2D5A3D' }}>{formatMoney(totalIncome, currency)}</td>
                           <td style={{ borderTop: '2px solid #1C2B1F' }} />
                         </tr>
                       </tfoot>
@@ -215,14 +214,14 @@ function LaporanPDFContent() {
                             <td style={{ whiteSpace: 'nowrap' }}>{formatDate(e.expense_date)}</td>
                             <td><span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: '#F8F5F0', color: '#6B6260' }}>{e.category}</span></td>
                             <td style={{ color: '#6B6260' }}>{e.description ?? '—'}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 500, color: '#8B2020' }}>{formatRp(e.amount)}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 500, color: '#8B2020' }}>{formatMoney(e.amount, currency)}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
                         <tr>
                           <td colSpan={4} style={{ fontWeight: 600, fontSize: 12, borderTop: '2px solid #1C2B1F', paddingTop: 8 }}>Total Pengeluaran</td>
-                          <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, borderTop: '2px solid #1C2B1F', paddingTop: 8, color: '#8B2020' }}>{formatRp(totalExpense)}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, borderTop: '2px solid #1C2B1F', paddingTop: 8, color: '#8B2020' }}>{formatMoney(totalExpense, currency)}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -232,7 +231,7 @@ function LaporanPDFContent() {
                 {/* Laba bersih summary */}
                 <div style={{ background: netProfit >= 0 ? '#E8F2EC' : '#FEECEC', borderRadius: 10, padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, color: '#1C2B1F' }}>Laba Bersih {bulanLabel}</span>
-                  <span style={{ fontFamily: 'serif', fontSize: 22, fontWeight: 700, color: netProfit >= 0 ? '#2D5A3D' : '#8B2020' }}>{formatRp(netProfit)}</span>
+                  <span style={{ fontFamily: 'serif', fontSize: 22, fontWeight: 700, color: netProfit >= 0 ? '#2D5A3D' : '#8B2020' }}>{formatMoney(netProfit, currency)}</span>
                 </div>
               </>
             )}

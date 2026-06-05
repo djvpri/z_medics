@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
+import { useT } from '@/contexts/LanguageContext'
+import { formatMoney } from '@/lib/formatMoney'
 
 const CATEGORIES = ['Peralatan', 'Obat/Herbal', 'Sewa', 'Gaji', 'Utilitas', 'Marketing', 'Lainnya']
 
@@ -38,9 +40,6 @@ interface Expense {
   description: string | null
 }
 
-function formatRp(val: number) {
-  return 'Rp ' + val.toLocaleString('id-ID')
-}
 
 function formatDate(d: string) {
   return new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -56,6 +55,7 @@ function getMonthLabel(key: string) {
 }
 
 export default function PengeluaranPage() {
+  const { currency } = useT()
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -156,12 +156,12 @@ export default function PengeluaranPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           <div className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Bulan Ini</div>
-            <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 26, color: 'var(--red)', lineHeight: 1 }}>{loading ? '...' : formatRp(monthTotal)}</div>
+            <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 26, color: 'var(--red)', lineHeight: 1 }}>{loading ? '...' : formatMoney(monthTotal, currency)}</div>
             <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>{now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</div>
           </div>
           <div className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Total Semua</div>
-            <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 26, color: 'var(--ink)', lineHeight: 1 }}>{loading ? '...' : formatRp(allTotal)}</div>
+            <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 26, color: 'var(--ink)', lineHeight: 1 }}>{loading ? '...' : formatMoney(allTotal, currency)}</div>
             <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>Semua waktu</div>
           </div>
           <div className="col-span-2 md:col-span-1 rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
@@ -169,7 +169,7 @@ export default function PengeluaranPage() {
             {topCat ? (
               <>
                 <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 20, color: 'var(--ink)', lineHeight: 1.2 }}>{topCat[0]}</div>
-                <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>{formatRp(topCat[1])} bulan ini</div>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>{formatMoney(topCat[1], currency)} bulan ini</div>
               </>
             ) : (
               <div style={{ fontSize: 13, color: 'var(--ink3)' }}>—</div>
@@ -233,7 +233,7 @@ export default function PengeluaranPage() {
                 {/* Month header */}
                 <div className="px-5 py-2 flex items-center justify-between" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border2)' }}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: 1 }}>{getMonthLabel(monthKey)}</span>
-                  <span style={{ fontSize: 12, color: 'var(--ink2)', fontWeight: 500 }}>{formatRp(items.reduce((s, e) => s + e.amount, 0))}</span>
+                  <span style={{ fontSize: 12, color: 'var(--ink2)', fontWeight: 500 }}>{formatMoney(items.reduce((s, e) => s + e.amount, 0), currency)}</span>
                 </div>
                 {items.map((expense, i) => {
                   const catColor = CATEGORY_COLORS[expense.category] ?? CATEGORY_COLORS['Lainnya']
@@ -244,7 +244,7 @@ export default function PengeluaranPage() {
                       </span>
                       <div className="flex-1 min-w-0">
                         <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)' }}>
-                          {formatRp(expense.amount)}
+                          {formatMoney(expense.amount, currency)}
                         </div>
                         {expense.description && (
                           <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 1 }}>{expense.description}</div>

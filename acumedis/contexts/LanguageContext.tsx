@@ -11,20 +11,27 @@ interface LangContextType {
   lang: Lang
   t: Translations
   setLang: (l: Lang) => void
+  currency: string
+  setCurrency: (c: string) => void
 }
 
 const LangContext = createContext<LangContextType>({
   lang: 'en',
   t: en,
   setLang: () => {},
+  currency: 'IDR',
+  setCurrency: () => {},
 })
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('en')
+  const [currency, setCurrencyState] = useState('IDR')
 
   useEffect(() => {
-    const saved = localStorage.getItem('zmedics_lang') as Lang | null
-    if (saved === 'en' || saved === 'id') setLangState(saved)
+    const savedLang = localStorage.getItem('zmedics_lang') as Lang | null
+    if (savedLang === 'en' || savedLang === 'id') setLangState(savedLang)
+    const savedCurrency = localStorage.getItem('zmedics_currency')
+    if (savedCurrency) setCurrencyState(savedCurrency)
   }, [])
 
   function setLang(l: Lang) {
@@ -32,10 +39,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('zmedics_lang', l)
   }
 
+  function setCurrency(c: string) {
+    setCurrencyState(c)
+    localStorage.setItem('zmedics_currency', c)
+  }
+
   const t = lang === 'id' ? id : en
 
   return (
-    <LangContext.Provider value={{ lang, t, setLang }}>
+    <LangContext.Provider value={{ lang, t, setLang, currency, setCurrency }}>
       {children}
     </LangContext.Provider>
   )

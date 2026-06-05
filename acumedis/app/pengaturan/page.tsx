@@ -5,15 +5,14 @@ import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import AvatarUploader from '@/components/ui/AvatarUploader'
 import ClinicPhotoManager from '@/components/ui/ClinicPhotoManager'
+import { useT } from '@/contexts/LanguageContext'
+import { CURRENCIES } from '@/lib/formatMoney'
 
-const PROVINCES = [
-  'Aceh','Sumatera Utara','Sumatera Barat','Riau','Jambi','Sumatera Selatan',
-  'Bengkulu','Lampung','Kepulauan Bangka Belitung','Kepulauan Riau',
-  'DKI Jakarta','Jawa Barat','Jawa Tengah','DI Yogyakarta','Jawa Timur',
-  'Banten','Bali','Nusa Tenggara Barat','Nusa Tenggara Timur',
-  'Kalimantan Barat','Kalimantan Tengah','Kalimantan Selatan','Kalimantan Timur','Kalimantan Utara',
-  'Sulawesi Utara','Sulawesi Tengah','Sulawesi Selatan','Sulawesi Tenggara','Gorontalo','Sulawesi Barat',
-  'Maluku','Maluku Utara','Papua Barat','Papua',
+const COUNTRIES = [
+  'Indonesia','Malaysia','Singapore','Brunei','Philippines',
+  'Thailand','Vietnam','Cambodia','Myanmar','Timor-Leste',
+  'Australia','United Kingdom','United States','Netherlands',
+  'Germany','France','Japan','South Korea','Other',
 ]
 
 const inp: React.CSSProperties = {
@@ -22,10 +21,11 @@ const inp: React.CSSProperties = {
 }
 
 export default function PengaturanPage() {
+  const { setCurrency } = useT()
   const [form, setForm] = useState({
-    name: '', clinic_name: '', specialty: 'Akupuntur & TCM', city: '', province: '',
+    name: '', clinic_name: '', specialty: 'Acupuncture & TCM', city: '', province: '',
     public_address: '', description: '', phone_public: '', is_listed: false, avatar_url: '',
-    default_fee: 0,
+    default_fee: 0, currency: 'IDR',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -45,6 +45,7 @@ export default function PengaturanPage() {
           clinic_name: data.clinic_name ?? '',
           avatar_url: data.avatar_url ?? '',
           default_fee: data.default_fee ?? 0,
+          currency: data.currency ?? 'IDR',
           specialty: data.specialty ?? 'Akupuntur & TCM',
           city: data.city ?? '',
           province: data.province ?? '',
@@ -77,7 +78,9 @@ export default function PengaturanPage() {
       is_listed: form.is_listed,
       avatar_url: form.avatar_url || null,
       default_fee: form.default_fee || 0,
+      currency: form.currency || 'IDR',
     }).eq('id', practitionerId)
+    setCurrency(form.currency || 'IDR')
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
@@ -170,14 +173,14 @@ export default function PengaturanPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Kota</label>
-                  <input type="text" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Jakarta Selatan" style={inp} onFocus={fo} onBlur={bl} />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>City</label>
+                  <input type="text" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Kuala Lumpur, Singapore..." style={inp} onFocus={fo} onBlur={bl} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Provinsi</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Country</label>
                   <select value={form.province} onChange={e => set('province', e.target.value)} style={{ ...inp, appearance: 'none' }} onFocus={fo} onBlur={bl}>
-                    <option value="">Pilih provinsi...</option>
-                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                    <option value="">Select country...</option>
+                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
@@ -188,9 +191,20 @@ export default function PengaturanPage() {
               </div>
 
               <div style={{ paddingTop: 16, borderTop: '1px solid var(--border2)' }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Tarif Terapi Default (Rp)</label>
-                <input type="number" min={0} step={1000} value={form.default_fee || ''} onChange={e => set('default_fee', Number(e.target.value) || 0)} placeholder="150000" style={inp} onFocus={fo} onBlur={bl} />
-                <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 5 }}>Otomatis terisi saat membuat sesi baru. Bisa diubah per sesi.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Currency</label>
+                    <select value={form.currency} onChange={e => set('currency', e.target.value)} style={{ ...inp, appearance: 'none' }} onFocus={fo} onBlur={bl}>
+                      {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+                    </select>
+                    <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 5 }}>Used for billing, reports, and receipts.</p>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Default Session Fee</label>
+                    <input type="number" min={0} step={1000} value={form.default_fee || ''} onChange={e => set('default_fee', Number(e.target.value) || 0)} placeholder="150000" style={inp} onFocus={fo} onBlur={bl} />
+                    <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 5 }}>Auto-filled when creating a new session.</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

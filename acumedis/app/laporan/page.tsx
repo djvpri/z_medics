@@ -6,15 +6,11 @@ import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { mockSessions, mockPatients } from '@/lib/mock-data'
 import { useT } from '@/contexts/LanguageContext'
+import { formatMoneyShort, formatMoney } from '@/lib/formatMoney'
 
 interface MonthData { label: string; count: number; income?: number }
 interface Stats { totalPatients: number; totalSessions: number; monthSessions: number; avgPerWeek: number; monthIncome: number; totalIncome: number; monthExpense: number; netProfit: number }
 
-function formatRp(val: number) {
-  if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1).replace('.0', '')} jt`
-  if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)} rb`
-  return `Rp ${val.toLocaleString('id-ID')}`
-}
 
 function getMonthLabel(offset: number): string {
   const d = new Date()
@@ -55,7 +51,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 }
 
 export default function LaporanPage() {
-  const { t, lang } = useT()
+  const { t, lang, currency } = useT()
   const [stats, setStats] = useState<Stats>({ totalPatients: 0, totalSessions: 0, monthSessions: 0, avgPerWeek: 0, monthIncome: 0, totalIncome: 0, monthExpense: 0, netProfit: 0 })
   const [monthlyData, setMonthlyData] = useState<MonthData[]>([])
   const [topKeluhan, setTopKeluhan] = useState<{ label: string; count: number }[]>([])
@@ -188,10 +184,10 @@ export default function LaporanPage() {
 
         {/* Stat keuangan */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <StatCard label="Pendapatan Bulan Ini" value={loading ? '...' : formatRp(stats.monthIncome)} sub="Sesi yang sudah lunas" accent />
-          <StatCard label="Total Pendapatan" value={loading ? '...' : formatRp(stats.totalIncome)} sub="Semua waktu · sesi lunas" />
-          <StatCard label="Pengeluaran Bulan Ini" value={loading ? '...' : formatRp(stats.monthExpense)} sub="Dari menu Pengeluaran" />
-          <StatCard label="Laba Bersih" value={loading ? '...' : formatRp(stats.netProfit)} sub="Pendapatan - Pengeluaran" accent={stats.netProfit >= 0} />
+          <StatCard label="Pendapatan Bulan Ini" value={loading ? '...' : formatMoneyShort(stats.monthIncome, currency)} sub="Sesi yang sudah lunas" accent />
+          <StatCard label="Total Pendapatan" value={loading ? '...' : formatMoneyShort(stats.totalIncome, currency)} sub="Semua waktu · sesi lunas" />
+          <StatCard label="Pengeluaran Bulan Ini" value={loading ? '...' : formatMoneyShort(stats.monthExpense, currency)} sub="Dari menu Pengeluaran" />
+          <StatCard label="Laba Bersih" value={loading ? '...' : formatMoneyShort(stats.netProfit, currency)} sub="Pendapatan - Pengeluaran" accent={stats.netProfit >= 0} />
         </div>
 
         {/* Chart + Top Keluhan */}
@@ -273,7 +269,7 @@ export default function LaporanPage() {
                       </td>
                       <td style={{ padding: '11px 20px', color: 'var(--ink2)' }}>{s.chief_complaint}</td>
                       <td style={{ padding: '11px 20px', color: 'var(--ink)', whiteSpace: 'nowrap' }}>
-                        {s.fee ? `Rp ${Number(s.fee).toLocaleString('id-ID')}` : '—'}
+                        {s.fee ? formatMoney(Number(s.fee), currency) : '—'}
                       </td>
                       <td style={{ padding: '11px 20px' }}>
                         {pay ? <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: pay.bg, color: pay.color }}>{pay.label}</span> : '—'}

@@ -25,19 +25,16 @@ function getStatus(scheduledAt: string, apptStatus: string): 'selesai' | 'segera
   return 'akan'
 }
 
-function formatRp(val: number) {
-  if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1).replace('.0', '')} jt`
-  if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)} rb`
-  return `Rp ${val.toLocaleString('id-ID')}`
-}
+import { formatMoneyShort } from '@/lib/formatMoney'
 
 function daysSince(dateStr: string) {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24))
 }
 
 function waLink(phone: string) {
-  const clean = phone.replace(/\D/g, '').replace(/^0/, '62')
-  return `https://wa.me/${clean}`
+  const clean = phone.replace(/\D/g, '')
+  // Jika dimulai 0, asumsi perlu country code — strip saja, user harus isi format internasional
+  return `https://wa.me/${clean.startsWith('0') ? clean.slice(1) : clean}`
 }
 
 interface Props {
@@ -51,7 +48,7 @@ interface Props {
 }
 
 export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts, pendingRequests, followUpPatients, lowStockItems }: Props) {
-  const { t, lang } = useT()
+  const { t, lang, currency } = useT()
 
   const todayLabel = new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -77,7 +74,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
     },
     {
       label: lang === 'id' ? 'Pendapatan Bulan Ini' : 'Monthly Income',
-      value: stats?.monthIncome != null ? formatRp(stats.monthIncome) : '—',
+      value: stats?.monthIncome != null ? formatMoneyShort(stats.monthIncome, currency) : '—',
       sub: lang === 'id' ? 'Sesi yang sudah lunas' : 'Paid sessions',
       accent: true,
     },

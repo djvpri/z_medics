@@ -4,14 +4,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
-const PROVINCES = [
-  'Aceh','Sumatera Utara','Sumatera Barat','Riau','Jambi','Sumatera Selatan',
-  'Bengkulu','Lampung','Kepulauan Bangka Belitung','Kepulauan Riau',
-  'DKI Jakarta','Jawa Barat','Jawa Tengah','DI Yogyakarta','Jawa Timur',
-  'Banten','Bali','Nusa Tenggara Barat','Nusa Tenggara Timur',
-  'Kalimantan Barat','Kalimantan Tengah','Kalimantan Selatan','Kalimantan Timur','Kalimantan Utara',
-  'Sulawesi Utara','Sulawesi Tengah','Sulawesi Selatan','Sulawesi Tenggara','Gorontalo','Sulawesi Barat',
-  'Maluku','Maluku Utara','Papua Barat','Papua',
+const COUNTRIES = [
+  'Indonesia','Malaysia','Singapore','Brunei','Philippines',
+  'Thailand','Vietnam','Cambodia','Myanmar','Timor-Leste',
+  'Australia','United Kingdom','United States','Netherlands',
+  'Germany','France','Japan','South Korea','Other',
 ]
 
 interface Clinic {
@@ -28,7 +25,7 @@ function getInitials(name: string) {
 export default function FindPage() {
   const [clinics, setClinics] = useState<Clinic[]>([])
   const [filtered, setFiltered] = useState<Clinic[]>([])
-  const [province, setProvince] = useState('')
+  const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -50,7 +47,7 @@ export default function FindPage() {
 
   useEffect(() => {
     let result = clinics
-    if (province) result = result.filter(c => c.province === province)
+    if (country) result = result.filter(c => c.province === country)
     if (city) result = result.filter(c => c.city?.toLowerCase().includes(city.toLowerCase()))
     if (search) result = result.filter(c =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,7 +69,7 @@ export default function FindPage() {
       <header style={{ background: 'var(--ink)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 22, color: '#F5F0E8', letterSpacing: -0.5 }}>Z Medics</div>
-          <div style={{ fontSize: 10, color: 'rgba(245,240,232,0.4)', letterSpacing: 2, textTransform: 'uppercase' }}>Temukan Klinik</div>
+          <div style={{ fontSize: 10, color: 'rgba(245,240,232,0.4)', letterSpacing: 2, textTransform: 'uppercase' }}>Find a Clinic</div>
         </div>
         <Link href="/login" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none' }}>
           Login Klinik
@@ -83,24 +80,24 @@ export default function FindPage() {
         {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h1 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 34, color: 'var(--ink)', marginBottom: 10 }}>
-            Temukan Klinik Akupuntur & TCM
+            Find Acupuncture & TCM Clinics
           </h1>
           <p style={{ fontSize: 15, color: 'var(--ink3)', maxWidth: 480, margin: '0 auto' }}>
-            Cari praktisi akupuntur dan TCM terdekat di kotamu
+            Search for acupuncture and TCM practitioners worldwide
           </p>
         </div>
 
         {/* Filter */}
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: 32 }}>
-          <select value={province} onChange={e => { setProvince(e.target.value); setCity('') }}
+          <select value={country} onChange={e => { setCountry(e.target.value); setCity('') }}
             style={{ ...inp, width: '100%' }}>
-            <option value="">Semua Provinsi</option>
-            {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+            <option value="">All Countries</option>
+            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <input type="text" placeholder="Cari kota..."
+          <input type="text" placeholder="Search city..."
             value={city} onChange={e => setCity(e.target.value)}
             style={{ ...inp, width: '100%' }} />
-          <input type="text" placeholder="Cari nama klinik atau spesialisasi..."
+          <input type="text" placeholder="Search clinic name or specialty..."
             value={search} onChange={e => setSearch(e.target.value)}
             style={{ ...inp, width: '100%' }} />
         </div>
@@ -114,8 +111,8 @@ export default function FindPage() {
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
             <p style={{ fontSize: 14, color: 'var(--ink3)' }}>
               {clinics.length === 0
-                ? 'Belum ada klinik yang terdaftar di direktori.'
-                : 'Tidak ada klinik ditemukan dengan filter tersebut.'}
+                ? 'No clinics listed yet.'
+                : 'No clinics found with those filters.'}
             </p>
           </div>
         ) : (
