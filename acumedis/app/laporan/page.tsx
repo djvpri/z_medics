@@ -125,7 +125,7 @@ export default function LaporanPage() {
         setRecentSessions(allSessions.slice(0, 8))
       } catch {
         // Fallback mock
-        setStats({ totalPatients: mockPatients.length, totalSessions: mockSessions.length, monthSessions: mockSessions.length, avgPerWeek: 3 })
+        setStats({ totalPatients: mockPatients.length, totalSessions: mockSessions.length, monthSessions: mockSessions.length, avgPerWeek: 3, monthIncome: 0, totalIncome: 0 })
         setMonthlyData(Array.from({ length: 6 }, (_, i) => ({ label: getMonthLabel(5 - i), count: i === 5 ? mockSessions.length : Math.floor(Math.random() * 5) })))
         setTopKeluhan([{ label: 'Nyeri punggung bawah', count: 2 }, { label: 'Insomnia', count: 1 }, { label: 'Migrain kronis', count: 1 }])
         setRecentSessions(mockSessions.map(s => ({ ...s, patient: s.patient ? { name: s.patient.name } : null })))
