@@ -10,6 +10,13 @@ import { mockPatients, mockSessions } from '@/lib/mock-data'
 import { NewSessionForm, TongueColor, TongueCoating, PulseQuality } from '@/types'
 import TonguePhotoUploader from '@/components/sessions/TonguePhotoUploader'
 
+const KELUHAN_TEMPLATES = [
+  'Nyeri punggung bawah', 'Nyeri leher & bahu', 'Nyeri lutut',
+  'Migrain / Sakit kepala', 'Insomnia', 'Stres & kecemasan',
+  'Kelelahan kronis', 'Maag / Gangguan pencernaan', 'Hipertensi',
+  'Nyeri haid', 'Bell\'s palsy', 'Sembelit',
+]
+
 const MERIDIANS = [
   { code: 'GB', name: 'Gallbladder' },
   { code: 'LI', name: 'Large Intestine' },
@@ -309,6 +316,18 @@ function SesiBaruForm() {
                     placeholder={t.session.chiefComplaintPlaceholder} required style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
+                  {/* Template keluhan cepat */}
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {KELUHAN_TEMPLATES.map(tmpl => {
+                      const active = form.chief_complaint === tmpl
+                      return (
+                        <button key={tmpl} type="button" onClick={() => setField('chief_complaint', tmpl)}
+                          style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11.5, border: '1px solid', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', transition: 'all 0.12s', borderColor: active ? 'var(--accent)' : 'var(--border)', background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--ink3)', fontWeight: active ? 500 : 400 }}>
+                          {tmpl}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
