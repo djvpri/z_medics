@@ -450,11 +450,12 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
               {sesi.payment_status && (() => {
-                const cfg = {
-                  paid:    { label: 'Lunas',    bg: 'var(--accent-light)', color: 'var(--accent)' },
-                  unpaid:  { label: 'Belum Bayar', bg: 'var(--red-light)',  color: 'var(--red)'    },
-                  partial: { label: 'Sebagian', bg: 'var(--gold-light)', color: 'var(--gold)'  },
-                }[sesi.payment_status] ?? { label: sesi.payment_status, bg: 'var(--bg2)', color: 'var(--ink3)' }
+                const payMap: Record<string, { label: string; bg: string; color: string }> = {
+                  paid:    { label: 'Lunas',       bg: 'var(--accent-light)', color: 'var(--accent)' },
+                  unpaid:  { label: 'Belum Bayar', bg: 'var(--red-light)',    color: 'var(--red)'    },
+                  partial: { label: 'Sebagian',    bg: 'var(--gold-light)',   color: 'var(--gold)'   },
+                }
+                const cfg = payMap[sesi.payment_status] ?? { label: sesi.payment_status, bg: 'var(--bg2)', color: 'var(--ink3)' }
                 return (
                   <span style={{ fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 20, background: cfg.bg, color: cfg.color }}>
                     {cfg.label}
