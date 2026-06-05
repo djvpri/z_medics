@@ -7,7 +7,7 @@ import { mockSessions, mockPatients } from '@/lib/mock-data'
 import { useT } from '@/contexts/LanguageContext'
 
 interface MonthData { label: string; count: number; income?: number }
-interface Stats { totalPatients: number; totalSessions: number; monthSessions: number; avgPerWeek: number; monthIncome: number; totalIncome: number }
+interface Stats { totalPatients: number; totalSessions: number; monthSessions: number; avgPerWeek: number; monthIncome: number; totalIncome: number; monthExpense: number; netProfit: number }
 
 function formatRp(val: number) {
   if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1).replace('.0', '')} jt`
@@ -55,7 +55,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 
 export default function LaporanPage() {
   const { t, lang } = useT()
-  const [stats, setStats] = useState<Stats>({ totalPatients: 0, totalSessions: 0, monthSessions: 0, avgPerWeek: 0, monthIncome: 0, totalIncome: 0 })
+  const [stats, setStats] = useState<Stats>({ totalPatients: 0, totalSessions: 0, monthSessions: 0, avgPerWeek: 0, monthIncome: 0, totalIncome: 0, monthExpense: 0, netProfit: 0 })
   const [monthlyData, setMonthlyData] = useState<MonthData[]>([])
   const [topKeluhan, setTopKeluhan] = useState<{ label: string; count: number }[]>([])
   const [recentSessions, setRecentSessions] = useState<any[]>([])
@@ -66,10 +66,11 @@ export default function LaporanPage() {
       try {
         const supabase = createClient()
 
-        const [{ count: totalPatients }, { count: totalSessions }, { data: sessions }] = await Promise.all([
+        const [{ count: totalPatients }, { count: totalSessions }, { data: sessions }, { data: expensesData }] = await Promise.all([
           supabase.from('patients').select('*', { count: 'exact', head: true }),
           supabase.from('sessions').select('*', { count: 'exact', head: true }),
           supabase.from('sessions').select('id, session_date, chief_complaint, fee, payment_status, patient:patients(name)').order('session_date', { ascending: false }).limit(100),
+          supabase.from('expenses').select('expense_date, amount').order('expense_date', { ascending: false }).limit(200),
         ])
 
         const allSessions = (sessions && sessions.length > 0)
@@ -109,7 +110,11 @@ export default function LaporanPage() {
         // Avg per week
         const avgPerWeek = totalS > 0 ? Math.round((totalS / 12) * 3) : 0
 
-        setStats({ totalPatients: totalP, totalSessions: totalS, monthSessions, avgPerWeek, monthIncome, totalIncome })
+        const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        const monthExpense = (expensesData ?? []).filter((e: any) => e.expense_date?.startsWith(nowStr)).reduce((s: number, e: any) => s + (e.amount ?? 0), 0)
+        const netProfit = monthIncome - monthExpense
+
+        setStats({ totalPatients: totalP, totalSessions: totalS, monthSessions, avgPerWeek, monthIncome, totalIncome, monthExpense, netProfit })
 
         // Top keluhan
         const keluhanMap: Record<string, number> = {}
@@ -125,7 +130,7 @@ export default function LaporanPage() {
         setRecentSessions(allSessions.slice(0, 8))
       } catch {
         // Fallback mock
-        setStats({ totalPatients: mockPatients.length, totalSessions: mockSessions.length, monthSessions: mockSessions.length, avgPerWeek: 3, monthIncome: 0, totalIncome: 0 })
+        setStats({ totalPatients: mockPatients.length, totalSessions: mockSessions.length, monthSessions: mockSessions.length, avgPerWeek: 3, monthIncome: 0, totalIncome: 0, monthExpense: 0, netProfit: 0 })
         setMonthlyData(Array.from({ length: 6 }, (_, i) => ({ label: getMonthLabel(5 - i), count: i === 5 ? mockSessions.length : Math.floor(Math.random() * 5) })))
         setTopKeluhan([{ label: 'Nyeri punggung bawah', count: 2 }, { label: 'Insomnia', count: 1 }, { label: 'Migrain kronis', count: 1 }])
         setRecentSessions(mockSessions.map(s => ({ ...s, patient: s.patient ? { name: s.patient.name } : null })))
@@ -175,9 +180,11 @@ export default function LaporanPage() {
         </div>
 
         {/* Stat keuangan */}
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <StatCard label="Pendapatan Bulan Ini" value={loading ? '...' : formatRp(stats.monthIncome)} sub="Sesi yang sudah lunas" accent />
           <StatCard label="Total Pendapatan" value={loading ? '...' : formatRp(stats.totalIncome)} sub="Semua waktu · sesi lunas" />
+          <StatCard label="Pengeluaran Bulan Ini" value={loading ? '...' : formatRp(stats.monthExpense)} sub="Dari menu Pengeluaran" />
+          <StatCard label="Laba Bersih" value={loading ? '...' : formatRp(stats.netProfit)} sub="Pendapatan - Pengeluaran" accent={stats.netProfit >= 0} />
         </div>
 
         {/* Chart + Top Keluhan */}

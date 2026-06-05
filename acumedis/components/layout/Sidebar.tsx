@@ -34,6 +34,7 @@ const nav: { section: string; items: NavItem[] }[] = [
     items: [
       { href: '/jadwal', label: 'Jadwal', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><rect x="1" y="2" width="14" height="12" rx="2"/><path d="M1 6h14M5 2v4M11 2v4"/></svg> },
       { href: '/laporan', label: 'Laporan', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 12L6 4l4 5 2-3 2 6"/></svg> },
+      { href: '/pengeluaran', label: 'Pengeluaran', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 8h12M8 2v12" strokeLinecap="round"/><circle cx="8" cy="8" r="6"/></svg> },
       { href: '/pengaturan', label: 'Settings', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><circle cx="8" cy="8" r="2.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M3.1 12.9l1.1-1.1M11.8 4.2l1.1-1.1"/></svg> },
     ],
   },
@@ -61,7 +62,8 @@ export default function Sidebar() {
       items: [
         { ...nav[2].items[0], label: t.nav.schedule },
         { ...nav[2].items[1], label: t.nav.reports },
-        { ...nav[2].items[2], label: lang === 'id' ? 'Pengaturan' : 'Settings' },
+        { ...nav[2].items[2], label: 'Pengeluaran' },
+        { ...nav[2].items[3], label: lang === 'id' ? 'Pengaturan' : 'Settings' },
       ],
     },
   ]
