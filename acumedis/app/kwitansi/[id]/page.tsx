@@ -69,8 +69,14 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
         @media print {
           body { background: white; }
           .no-print { display: none !important; }
-          .receipt { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
-          @page { margin: 1cm; size: A5; }
+          .print-outer { padding: 0 !important; min-height: auto !important; }
+          .receipt {
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          @page { margin: 0.5cm; size: A5 portrait; }
         }
       `}</style>
 
@@ -90,27 +96,27 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
       </div>
 
       {/* Receipt */}
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 16px', minHeight: 'calc(100vh - 52px)' }}>
-        <div className="receipt" style={{ background: 'white', width: '100%', maxWidth: 520, borderRadius: 16, boxShadow: '0 4px 40px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
+      <div className="print-outer" style={{ display: 'flex', justifyContent: 'center', padding: '24px 16px', minHeight: 'calc(100vh - 52px)' }}>
+        <div className="receipt" style={{ background: 'white', width: '100%', maxWidth: 480, borderRadius: 16, boxShadow: '0 4px 40px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
 
           {/* Header klinik */}
-          <div style={{ background: '#1C2B1F', padding: '28px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ background: '#1C2B1F', padding: '18px 24px', display: 'flex', alignItems: 'center', gap: 14 }}>
             {klinik?.avatar_url ? (
-              <img src={klinik.avatar_url} alt="logo" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+              <img src={klinik.avatar_url} alt="logo" style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
             ) : (
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#4A8C60', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', flexShrink: 0 }}>
+              <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#4A8C60', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, color: '#fff', flexShrink: 0 }}>
                 {(klinik?.clinic_name ?? klinik?.name ?? 'K')[0]}
               </div>
             )}
             <div>
-              <div style={{ fontFamily: 'serif', fontSize: 20, color: '#F5F0E8', letterSpacing: -0.3 }}>
+              <div style={{ fontFamily: 'serif', fontSize: 17, color: '#F5F0E8', letterSpacing: -0.3 }}>
                 {klinik?.clinic_name ?? klinik?.name ?? 'Z Medics'}
               </div>
               {klinik?.name && klinik.clinic_name && (
-                <div style={{ fontSize: 12, color: 'rgba(245,240,232,0.5)', marginTop: 2 }}>{klinik.name}</div>
+                <div style={{ fontSize: 11, color: 'rgba(245,240,232,0.5)', marginTop: 1 }}>{klinik.name}</div>
               )}
               {(klinik?.public_address || klinik?.city) && (
-                <div style={{ fontSize: 11, color: 'rgba(245,240,232,0.4)', marginTop: 3 }}>
+                <div style={{ fontSize: 10, color: 'rgba(245,240,232,0.4)', marginTop: 2 }}>
                   {[klinik.public_address, klinik.city].filter(Boolean).join(', ')}
                 </div>
               )}
@@ -118,46 +124,46 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
           </div>
 
           {/* Judul & nomor */}
-          <div style={{ padding: '20px 32px 16px', borderBottom: '1px dashed #e0dbd4', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ padding: '14px 24px', borderBottom: '1px dashed #e0dbd4', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 10, color: '#9C9389', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Kwitansi Pembayaran</div>
-              <div style={{ fontFamily: 'serif', fontSize: 22, color: '#1C2B1F' }}>{nomorKwitansi}</div>
+              <div style={{ fontSize: 9, color: '#9C9389', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 3 }}>Kwitansi Pembayaran</div>
+              <div style={{ fontFamily: 'serif', fontSize: 18, color: '#1C2B1F' }}>{nomorKwitansi}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 11, color: '#9C9389', marginBottom: 2 }}>Tanggal Sesi</div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#3D3530' }}>{formatDate(sesi.session_date)}</div>
+              <div style={{ fontSize: 10, color: '#9C9389', marginBottom: 2 }}>Tanggal Sesi</div>
+              <div style={{ fontSize: 12, fontWeight: 500, color: '#3D3530' }}>{formatDate(sesi.session_date)}</div>
             </div>
           </div>
 
           {/* Info pasien */}
-          <div style={{ padding: '16px 32px', borderBottom: '1px dashed #e0dbd4' }}>
-            <div style={{ fontSize: 10, color: '#9C9389', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>Diterima dari</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#1C2B1F', marginBottom: 4 }}>{sesi.patient?.name ?? '—'}</div>
-            {sesi.patient?.phone && <div style={{ fontSize: 13, color: '#6B6260' }}>{sesi.patient.phone}</div>}
+          <div style={{ padding: '12px 24px', borderBottom: '1px dashed #e0dbd4' }}>
+            <div style={{ fontSize: 9, color: '#9C9389', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Diterima dari</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#1C2B1F', marginBottom: 2 }}>{sesi.patient?.name ?? '—'}</div>
+            {sesi.patient?.phone && <div style={{ fontSize: 12, color: '#6B6260' }}>{sesi.patient.phone}</div>}
           </div>
 
           {/* Detail layanan */}
-          <div style={{ padding: '16px 32px', borderBottom: '1px dashed #e0dbd4' }}>
-            <div style={{ fontSize: 10, color: '#9C9389', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 10 }}>Detail Layanan</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+          <div style={{ padding: '12px 24px', borderBottom: '1px dashed #e0dbd4' }}>
+            <div style={{ fontSize: 9, color: '#9C9389', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Detail Layanan</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ color: '#6B6260' }}>Keluhan</span>
                 <span style={{ color: '#1C2B1F', fontWeight: 500, textAlign: 'right', maxWidth: '60%' }}>{sesi.chief_complaint}</span>
               </div>
               {sesi.tcm_diagnosis && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                   <span style={{ color: '#6B6260' }}>Diagnosis</span>
                   <span style={{ color: '#1C2B1F', fontWeight: 500, textAlign: 'right', maxWidth: '60%' }}>{sesi.tcm_diagnosis}</span>
                 </div>
               )}
               {sesi.points_used?.length > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                   <span style={{ color: '#6B6260' }}>Titik Akupuntur</span>
                   <span style={{ color: '#1C2B1F', fontWeight: 500, textAlign: 'right', maxWidth: '60%' }}>{sesi.points_used.join(', ')}</span>
                 </div>
               )}
               {sesi.duration_minutes && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                   <span style={{ color: '#6B6260' }}>Durasi</span>
                   <span style={{ color: '#1C2B1F', fontWeight: 500 }}>{sesi.duration_minutes} menit</span>
                 </div>
@@ -166,33 +172,33 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
           </div>
 
           {/* Total & status */}
-          <div style={{ padding: '20px 32px', borderBottom: '1px dashed #e0dbd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '14px 24px', borderBottom: '1px dashed #e0dbd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 11, color: '#9C9389', marginBottom: 4 }}>Total Biaya</div>
-              <div style={{ fontFamily: 'serif', fontSize: 28, color: '#1C2B1F' }}>
+              <div style={{ fontSize: 10, color: '#9C9389', marginBottom: 3 }}>Total Biaya</div>
+              <div style={{ fontFamily: 'serif', fontSize: 24, color: '#1C2B1F' }}>
                 {sesi.fee ? formatRp(sesi.fee) : '—'}
               </div>
             </div>
             {sesi.payment_status && (
-              <div style={{ padding: '8px 18px', borderRadius: 24, fontWeight: 700, fontSize: 13, letterSpacing: 0.5, background: isPaid ? '#E8F2EC' : sesi.payment_status === 'partial' ? '#FFF8E1' : '#FEECEC', color: isPaid ? '#2D5A3D' : sesi.payment_status === 'partial' ? '#B8860B' : '#8B2020' }}>
+              <div style={{ padding: '6px 14px', borderRadius: 24, fontWeight: 700, fontSize: 12, letterSpacing: 0.5, background: isPaid ? '#E8F2EC' : sesi.payment_status === 'partial' ? '#FFF8E1' : '#FEECEC', color: isPaid ? '#2D5A3D' : sesi.payment_status === 'partial' ? '#B8860B' : '#8B2020' }}>
                 {payLabel[sesi.payment_status] ?? sesi.payment_status}
               </div>
             )}
           </div>
 
           {/* Tanda tangan */}
-          <div style={{ padding: '20px 32px 28px', display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ padding: '14px 24px 20px', display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: '#9C9389', marginBottom: 48 }}>Terapis</div>
-              <div style={{ width: 140, borderTop: '1px solid #c0bab4', paddingTop: 6 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: '#1C2B1F' }}>{klinik?.name ?? '—'}</div>
+              <div style={{ fontSize: 10, color: '#9C9389', marginBottom: 32 }}>Terapis</div>
+              <div style={{ width: 130, borderTop: '1px solid #c0bab4', paddingTop: 5 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: '#1C2B1F' }}>{klinik?.name ?? '—'}</div>
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div style={{ padding: '12px 32px', background: '#F8F5F0', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#9C9389' }}>Dokumen ini diterbitkan secara digital oleh sistem Z Medics</div>
+          <div style={{ padding: '8px 24px', background: '#F8F5F0', textAlign: 'center' }}>
+            <div style={{ fontSize: 9, color: '#9C9389' }}>Dokumen ini diterbitkan secara digital oleh sistem Z Medics</div>
           </div>
         </div>
       </div>
