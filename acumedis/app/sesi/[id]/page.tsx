@@ -438,6 +438,33 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
+        {/* Biaya & Pembayaran */}
+        {(sesi.fee != null || sesi.payment_status) && (
+          <div className="rounded-xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 15, color: 'var(--ink)', marginBottom: 14 }}>Biaya & Pembayaran</h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 3 }}>Biaya Terapi</div>
+                <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 22, color: 'var(--ink)' }}>
+                  {sesi.fee ? `Rp ${sesi.fee.toLocaleString('id-ID')}` : '—'}
+                </div>
+              </div>
+              {sesi.payment_status && (() => {
+                const cfg = {
+                  paid:    { label: 'Lunas',    bg: 'var(--accent-light)', color: 'var(--accent)' },
+                  unpaid:  { label: 'Belum Bayar', bg: 'var(--red-light)',  color: 'var(--red)'    },
+                  partial: { label: 'Sebagian', bg: 'var(--gold-light)', color: 'var(--gold)'  },
+                }[sesi.payment_status] ?? { label: sesi.payment_status, bg: 'var(--bg2)', color: 'var(--ink3)' }
+                return (
+                  <span style={{ fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 20, background: cfg.bg, color: cfg.color }}>
+                    {cfg.label}
+                  </span>
+                )
+              })()}
+            </div>
+          </div>
+        )}
+
         {/* Foto Lidah */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>

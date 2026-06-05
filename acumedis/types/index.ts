@@ -1,5 +1,7 @@
 export type Gender = 'male' | 'female'
 
+export type PaymentStatus = 'paid' | 'unpaid' | 'partial'
+
 export type TongueColor = 'red' | 'pale-red' | 'pale' | 'purple' | 'dark-red'
 
 export type TongueCoating =
@@ -59,6 +61,8 @@ export interface Session {
   duration_minutes?: number
   notes?: string
   ai_recommendation?: AIRecommendation
+  fee?: number
+  payment_status?: PaymentStatus
   created_at: string
   // joined
   patient?: Patient
@@ -110,4 +114,6 @@ export interface NewSessionForm {
   points_used?: string[]
   duration_minutes?: number
   notes?: string
+  fee?: number
+  payment_status?: PaymentStatus
 }

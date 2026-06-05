@@ -131,8 +131,15 @@ function SesiBaruForm() {
   const [aiError, setAiError] = useState('')
 
   useEffect(() => {
-    createClient().from('patients').select('id, name').order('name')
+    const supabase = createClient()
+    supabase.from('patients').select('id, name').order('name')
       .then(({ data }) => { if (data && data.length > 0) setPatients(data) })
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase.from('practitioners').select('default_fee').eq('id', user.id).single()
+          .then(({ data }) => { if (data?.default_fee) setField('fee', data.default_fee) })
+      }
+    })
   }, [])
 
   function setField<K extends keyof NewSessionForm>(key: K, value: NewSessionForm[K]) {
@@ -389,6 +396,38 @@ function SesiBaruForm() {
                     placeholder={t.session.pointsPlaceholder} style={inputStyle}
                     onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
                     onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
+                </div>
+              </div>
+            </div>
+
+            {/* Biaya & Pembayaran */}
+            <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
+                <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Biaya & Pembayaran</h2>
+              </div>
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label style={labelStyle}>Biaya Terapi (Rp)</label>
+                    <input type="number" min={0} step={1000} value={form.fee ?? ''} onChange={e => setField('fee', e.target.value ? Number(e.target.value) : undefined)} placeholder="150000" style={inputStyle}
+                      onFocus={e => (e.target.style.borderColor = 'var(--accent2)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Status Pembayaran</label>
+                    <div className="flex gap-1.5">
+                      {([['paid', 'Lunas'], ['unpaid', 'Belum'], ['partial', 'Sebagian']] as const).map(([val, label]) => {
+                        const active = form.payment_status === val
+                        const colors: Record<string, string> = { paid: 'var(--accent)', unpaid: 'var(--red)', partial: 'var(--gold)' }
+                        return (
+                          <button key={val} type="button" onClick={() => setField('payment_status', val)}
+                            style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s', fontFamily: 'var(--font-dm-sans)', borderColor: active ? colors[val] : 'var(--border)', background: active ? (val === 'paid' ? 'var(--accent-light)' : val === 'unpaid' ? 'var(--red-light)' : 'var(--gold-light)') : 'transparent', color: active ? colors[val] : 'var(--ink3)' }}>
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

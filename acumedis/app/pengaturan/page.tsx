@@ -25,6 +25,7 @@ export default function PengaturanPage() {
   const [form, setForm] = useState({
     name: '', clinic_name: '', specialty: 'Akupuntur & TCM', city: '', province: '',
     public_address: '', description: '', phone_public: '', is_listed: false, avatar_url: '',
+    default_fee: 0,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -43,6 +44,7 @@ export default function PengaturanPage() {
           name: data.name ?? '',
           clinic_name: data.clinic_name ?? '',
           avatar_url: data.avatar_url ?? '',
+          default_fee: data.default_fee ?? 0,
           specialty: data.specialty ?? 'Akupuntur & TCM',
           city: data.city ?? '',
           province: data.province ?? '',
@@ -74,6 +76,7 @@ export default function PengaturanPage() {
       phone_public: form.phone_public || null,
       is_listed: form.is_listed,
       avatar_url: form.avatar_url || null,
+      default_fee: form.default_fee || 0,
     }).eq('id', practitionerId)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -182,6 +185,12 @@ export default function PengaturanPage() {
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>No. Telepon / WhatsApp Publik</label>
                 <input type="tel" value={form.phone_public} onChange={e => set('phone_public', e.target.value)} placeholder="08xxxxxxxxxx" style={inp} onFocus={fo} onBlur={bl} />
+              </div>
+
+              <div style={{ paddingTop: 16, borderTop: '1px solid var(--border2)' }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Tarif Terapi Default (Rp)</label>
+                <input type="number" min={0} step={1000} value={form.default_fee || ''} onChange={e => set('default_fee', Number(e.target.value) || 0)} placeholder="150000" style={inp} onFocus={fo} onBlur={bl} />
+                <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 5 }}>Otomatis terisi saat membuat sesi baru. Bisa diubah per sesi.</p>
               </div>
             </div>
           </div>

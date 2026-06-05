@@ -6,8 +6,14 @@ import { createClient } from '@/lib/supabase/client'
 import { mockSessions, mockPatients } from '@/lib/mock-data'
 import { useT } from '@/contexts/LanguageContext'
 
-interface MonthData { label: string; count: number }
-interface Stats { totalPatients: number; totalSessions: number; monthSessions: number; avgPerWeek: number }
+interface MonthData { label: string; count: number; income?: number }
+interface Stats { totalPatients: number; totalSessions: number; monthSessions: number; avgPerWeek: number; monthIncome: number; totalIncome: number }
+
+function formatRp(val: number) {
+  if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(1).replace('.0', '')} jt`
+  if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)} rb`
+  return `Rp ${val.toLocaleString('id-ID')}`
+}
 
 function getMonthLabel(offset: number): string {
   const d = new Date()
@@ -49,7 +55,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 
 export default function LaporanPage() {
   const { t, lang } = useT()
-  const [stats, setStats] = useState<Stats>({ totalPatients: 0, totalSessions: 0, monthSessions: 0, avgPerWeek: 0 })
+  const [stats, setStats] = useState<Stats>({ totalPatients: 0, totalSessions: 0, monthSessions: 0, avgPerWeek: 0, monthIncome: 0, totalIncome: 0 })
   const [monthlyData, setMonthlyData] = useState<MonthData[]>([])
   const [topKeluhan, setTopKeluhan] = useState<{ label: string; count: number }[]>([])
   const [recentSessions, setRecentSessions] = useState<any[]>([])
@@ -63,7 +69,7 @@ export default function LaporanPage() {
         const [{ count: totalPatients }, { count: totalSessions }, { data: sessions }] = await Promise.all([
           supabase.from('patients').select('*', { count: 'exact', head: true }),
           supabase.from('sessions').select('*', { count: 'exact', head: true }),
-          supabase.from('sessions').select('id, session_date, chief_complaint, patient:patients(name)').order('session_date', { ascending: false }).limit(100),
+          supabase.from('sessions').select('id, session_date, chief_complaint, fee, payment_status, patient:patients(name)').order('session_date', { ascending: false }).limit(100),
         ])
 
         const allSessions = (sessions && sessions.length > 0)
@@ -74,30 +80,36 @@ export default function LaporanPage() {
         const totalS = totalSessions ?? mockSessions.length
 
         // Monthly data (last 6 months)
+        const now = new Date()
         const months: MonthData[] = Array.from({ length: 6 }, (_, i) => {
           const d = new Date()
           d.setMonth(d.getMonth() - (5 - i))
           const y = d.getFullYear()
           const m = d.getMonth()
-          const count = allSessions.filter((s: any) => {
+          const monthSes = allSessions.filter((s: any) => {
             const sd = new Date(s.session_date)
             return sd.getFullYear() === y && sd.getMonth() === m
-          }).length
-          return { label: getMonthLabel(5 - i), count }
+          })
+          const income = monthSes.filter((s: any) => s.payment_status === 'paid').reduce((sum: number, s: any) => sum + (s.fee ?? 0), 0)
+          return { label: getMonthLabel(5 - i), count: monthSes.length, income }
         })
         setMonthlyData(months)
 
-        // This month sessions
-        const now = new Date()
+        // This month sessions + income
         const monthSessions = allSessions.filter((s: any) => {
           const sd = new Date(s.session_date)
           return sd.getFullYear() === now.getFullYear() && sd.getMonth() === now.getMonth()
         }).length
+        const monthIncome = allSessions.filter((s: any) => {
+          const sd = new Date(s.session_date)
+          return sd.getFullYear() === now.getFullYear() && sd.getMonth() === now.getMonth() && s.payment_status === 'paid'
+        }).reduce((sum: number, s: any) => sum + (s.fee ?? 0), 0)
+        const totalIncome = allSessions.filter((s: any) => s.payment_status === 'paid').reduce((sum: number, s: any) => sum + (s.fee ?? 0), 0)
 
         // Avg per week
         const avgPerWeek = totalS > 0 ? Math.round((totalS / 12) * 3) : 0
 
-        setStats({ totalPatients: totalP, totalSessions: totalS, monthSessions, avgPerWeek })
+        setStats({ totalPatients: totalP, totalSessions: totalS, monthSessions, avgPerWeek, monthIncome, totalIncome })
 
         // Top keluhan
         const keluhanMap: Record<string, number> = {}
@@ -162,6 +174,12 @@ export default function LaporanPage() {
           <StatCard label={t.report.avgPerWeek} value={loading ? '...' : stats.avgPerWeek} sub={t.report.estimated} />
         </div>
 
+        {/* Stat keuangan */}
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <StatCard label="Pendapatan Bulan Ini" value={loading ? '...' : formatRp(stats.monthIncome)} sub="Sesi yang sudah lunas" accent />
+          <StatCard label="Total Pendapatan" value={loading ? '...' : formatRp(stats.totalIncome)} sub="Semua waktu · sesi lunas" />
+        </div>
+
         {/* Chart + Top Keluhan */}
         <div className="grid gap-5 grid-cols-1 lg:grid-cols-[1fr_300px]">
           {/* Bar chart */}
@@ -218,23 +236,37 @@ export default function LaporanPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border2)' }}>
-                  {[t.report.date, t.report.patient, t.session.chiefComplaint].map(h => (
+                  {[t.report.date, t.report.patient, t.session.chiefComplaint, 'Biaya', 'Status'].map(h => (
                     <th key={h} style={{ textAlign: 'left', padding: '10px 20px', fontSize: 11, color: 'var(--ink3)', fontWeight: 500, letterSpacing: 0.5 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {recentSessions.map((s, i) => (
-                  <tr key={s.id} style={{ borderBottom: i < recentSessions.length - 1 ? '1px solid var(--border2)' : 'none' }}>
-                    <td style={{ padding: '11px 20px', color: 'var(--ink3)', whiteSpace: 'nowrap' }}>
-                      {new Date(s.session_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td style={{ padding: '11px 20px', color: 'var(--ink)', fontWeight: 500 }}>
-                      {(s.patient as any)?.name ?? '-'}
-                    </td>
-                    <td style={{ padding: '11px 20px', color: 'var(--ink2)' }}>{s.chief_complaint}</td>
-                  </tr>
-                ))}
+                {recentSessions.map((s, i) => {
+                  const paymentCfg: Record<string, { label: string; bg: string; color: string }> = {
+                    paid:    { label: 'Lunas',    bg: 'var(--accent-light)', color: 'var(--accent)' },
+                    unpaid:  { label: 'Belum',    bg: 'var(--red-light)',    color: 'var(--red)'    },
+                    partial: { label: 'Sebagian', bg: 'var(--gold-light)',   color: 'var(--gold)'   },
+                  }
+                  const pay = s.payment_status ? paymentCfg[s.payment_status] : null
+                  return (
+                    <tr key={s.id} style={{ borderBottom: i < recentSessions.length - 1 ? '1px solid var(--border2)' : 'none' }}>
+                      <td style={{ padding: '11px 20px', color: 'var(--ink3)', whiteSpace: 'nowrap' }}>
+                        {new Date(s.session_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td style={{ padding: '11px 20px', color: 'var(--ink)', fontWeight: 500 }}>
+                        {(s.patient as any)?.name ?? '-'}
+                      </td>
+                      <td style={{ padding: '11px 20px', color: 'var(--ink2)' }}>{s.chief_complaint}</td>
+                      <td style={{ padding: '11px 20px', color: 'var(--ink)', whiteSpace: 'nowrap' }}>
+                        {s.fee ? `Rp ${Number(s.fee).toLocaleString('id-ID')}` : '—'}
+                      </td>
+                      <td style={{ padding: '11px 20px' }}>
+                        {pay ? <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: pay.bg, color: pay.color }}>{pay.label}</span> : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}
