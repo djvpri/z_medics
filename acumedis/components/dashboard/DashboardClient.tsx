@@ -31,15 +31,25 @@ function formatRp(val: number) {
   return `Rp ${val.toLocaleString('id-ID')}`
 }
 
+function daysSince(dateStr: string) {
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function waLink(phone: string) {
+  const clean = phone.replace(/\D/g, '').replace(/^0/, '62')
+  return `https://wa.me/${clean}`
+}
+
 interface Props {
   stats: { totalPatients: number; totalSessions: number; todaySessions: number; newPatients: number; monthIncome: number } | null
   weekAppts: any[]
   groupedByDay: Record<string, any[]>
   todayAppts: any[]
   pendingRequests: any[]
+  followUpPatients: { id: string; name: string; phone: string | null; lastDate: string }[]
 }
 
-export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts, pendingRequests }: Props) {
+export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts, pendingRequests, followUpPatients }: Props) {
   const { t, lang } = useT()
 
   const todayLabel = new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', {
@@ -192,6 +202,53 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
 
           {/* AI Panel */}
           <AIPanel />
+
+          {/* Follow-up pasien */}
+          {followUpPatients.length > 0 && (
+            <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)' }}>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 15, color: 'var(--ink)' }}>
+                    {lang === 'id' ? '🔔 Perlu Follow-up' : '🔔 Follow-up Needed'}
+                  </h2>
+                  <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>
+                    {followUpPatients.length} {lang === 'id' ? 'pasien tidak kembali > 30 hari' : 'patients inactive > 30 days'}
+                  </p>
+                </div>
+                <Link href="/pasien" style={{ fontSize: 11, color: 'var(--ink2)', fontWeight: 500, textDecoration: 'none', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: 7 }}>
+                  {lang === 'id' ? 'Semua pasien' : 'All patients'}
+                </Link>
+              </div>
+              <div className="px-5 divide-y" style={{ borderColor: 'var(--border2)' }}>
+                {followUpPatients.map(p => {
+                  const days = daysSince(p.lastDate)
+                  const urgency = days > 90 ? 'var(--red)' : days > 60 ? 'var(--gold)' : 'var(--ink3)'
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 py-3">
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)' }}>{p.name}</div>
+                        <div style={{ fontSize: 12, color: urgency, marginTop: 1 }}>
+                          {lang === 'id' ? `Terakhir sesi ${days} hari lalu` : `Last session ${days} days ago`}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Link href={`/pasien/${p.id}`}
+                          style={{ padding: '4px 10px', borderRadius: 7, fontSize: 12, border: '1px solid var(--border)', color: 'var(--ink2)', textDecoration: 'none' }}>
+                          {lang === 'id' ? 'Lihat' : 'View'}
+                        </Link>
+                        {p.phone && (
+                          <a href={waLink(p.phone)} target="_blank" rel="noopener noreferrer"
+                            style={{ padding: '4px 10px', borderRadius: 7, fontSize: 12, fontWeight: 500, background: '#25D366', color: '#fff', textDecoration: 'none' }}>
+                            WA
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Permintaan jadwal masuk */}
           {pendingRequests.length > 0 && (

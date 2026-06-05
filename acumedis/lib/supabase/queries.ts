@@ -131,6 +131,38 @@ export async function getPatientLastTonguePhoto(patientId: string) {
   return data?.[0] ?? null
 }
 
+// ── Follow-up reminders ───────────────────────────────────────
+
+export async function getFollowUpPatients(daysThreshold = 30) {
+  const supabase = await createServerSupabaseClient()
+
+  // Ambil sesi terbaru per pasien (limit untuk efisiensi)
+  const { data: sessions } = await supabase
+    .from('sessions')
+    .select('patient_id, session_date, patient:patients(id, name, phone)')
+    .order('session_date', { ascending: false })
+    .limit(500)
+
+  if (!sessions) return []
+
+  // Temukan sesi terakhir per pasien
+  const lastSeen: Record<string, { id: string; name: string; phone: string | null; lastDate: string }> = {}
+  for (const s of sessions) {
+    if (!lastSeen[s.patient_id]) {
+      const p = s.patient as any
+      lastSeen[s.patient_id] = { id: p?.id ?? s.patient_id, name: p?.name ?? '—', phone: p?.phone ?? null, lastDate: s.session_date }
+    }
+  }
+
+  const threshold = new Date()
+  threshold.setDate(threshold.getDate() - daysThreshold)
+
+  return Object.values(lastSeen)
+    .filter(p => new Date(p.lastDate) < threshold)
+    .sort((a, b) => new Date(a.lastDate).getTime() - new Date(b.lastDate).getTime())
+    .slice(0, 10)
+}
+
 // ── Today's appointments ──────────────────────────────────────
 
 export async function getWeekAppointments() {

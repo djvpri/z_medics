@@ -1,11 +1,12 @@
 import DashboardClient from '@/components/dashboard/DashboardClient'
-import { getDashboardStats, getWeekAppointments, getPendingRequests } from '@/lib/supabase/queries'
+import { getDashboardStats, getWeekAppointments, getPendingRequests, getFollowUpPatients } from '@/lib/supabase/queries'
 
 export default async function DashboardPage() {
-  const [stats, weekAppts, pendingRequests] = await Promise.all([
+  const [stats, weekAppts, pendingRequests, followUpPatients] = await Promise.all([
     getDashboardStats().catch(() => null),
     getWeekAppointments().catch(() => []),
     getPendingRequests().catch(() => []),
+    getFollowUpPatients(30).catch(() => []),
   ])
 
   const today = new Date()
@@ -33,6 +34,7 @@ export default async function DashboardPage() {
       groupedByDay={groupedByDay}
       todayAppts={todayAppts}
       pendingRequests={pendingRequests}
+      followUpPatients={followUpPatients}
     />
   )
 }
