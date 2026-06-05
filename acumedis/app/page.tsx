@@ -235,7 +235,7 @@ export default function LandingPage() {
             </a>
 
             {/* LinkedIn */}
-            <a href="https://www.linkedin.com/in/muhammad-andi-juprianto" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.linkedin.com/in/muhammad-andi-juprianto-s-pd-mm-380745192" target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '20px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, textDecoration: 'none', transition: 'box-shadow 0.15s' }}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-lg)')}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.boxShadow = 'none')}>
@@ -280,7 +280,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
           <a href="https://wa.me/6282153533164" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'rgba(245,240,232,0.35)', textDecoration: 'none' }}>WhatsApp</a>
           <a href="mailto:sentarummedia@gmail.com" style={{ fontSize: 12, color: 'rgba(245,240,232,0.35)', textDecoration: 'none' }}>Email</a>
-          <a href="https://www.linkedin.com/in/muhammad-andi-juprianto" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'rgba(245,240,232,0.35)', textDecoration: 'none' }}>LinkedIn</a>
+          <a href="https://www.linkedin.com/in/muhammad-andi-juprianto-s-pd-mm-380745192" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'rgba(245,240,232,0.35)', textDecoration: 'none' }}>LinkedIn</a>
         </div>
       </footer>
 
