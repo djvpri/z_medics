@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useT } from '@/contexts/LanguageContext'
+import { createClient } from '@/lib/supabase/client'
 
 interface NavItem {
   href: string
@@ -33,6 +34,7 @@ const nav: { section: string; items: NavItem[] }[] = [
     section: 'Klinik',
     items: [
       { href: '/jadwal', label: 'Jadwal', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><rect x="1" y="2" width="14" height="12" rx="2"/><path d="M1 6h14M5 2v4M11 2v4"/></svg> },
+      { href: '/jadwal/permintaan', label: 'Permintaan', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 2h12a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 3v-3H2a1 1 0 01-1-1V3a1 1 0 011-1z"/></svg> },
       { href: '/laporan', label: 'Laporan', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 12L6 4l4 5 2-3 2 6"/></svg> },
       { href: '/pengeluaran', label: 'Pengeluaran', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 8h12M8 2v12" strokeLinecap="round"/><circle cx="8" cy="8" r="6"/></svg> },
       { href: '/pengaturan', label: 'Settings', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><circle cx="8" cy="8" r="2.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M3.1 12.9l1.1-1.1M11.8 4.2l1.1-1.1"/></svg> },
@@ -43,6 +45,42 @@ const nav: { section: string; items: NavItem[] }[] = [
 export default function Sidebar() {
   const pathname = usePathname()
   const { t, lang, setLang } = useT()
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Ambil jumlah permintaan pending
+    async function fetchPending() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { count } = await supabase
+        .from('appointment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('practitioner_id', user.id)
+        .eq('status', 'pending')
+      setPendingCount(count ?? 0)
+    }
+    fetchPending()
+
+    // Realtime — naikkan badge saat ada request baru masuk
+    const channel = supabase
+      .channel('sidebar_requests')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'appointment_requests' },
+        () => { setPendingCount(prev => prev + 1) }
+      )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'appointment_requests' },
+        () => { fetchPending() }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
+  // Reset badge saat buka halaman permintaan
+  useEffect(() => {
+    if (pathname === '/jadwal/permintaan') setPendingCount(0)
+  }, [pathname])
 
   const navGroups = [
     {
@@ -61,9 +99,10 @@ export default function Sidebar() {
       section: lang === 'id' ? 'Klinik' : 'Clinic',
       items: [
         { ...nav[2].items[0], label: t.nav.schedule },
-        { ...nav[2].items[1], label: t.nav.reports },
-        { ...nav[2].items[2], label: 'Pengeluaran' },
-        { ...nav[2].items[3], label: lang === 'id' ? 'Pengaturan' : 'Settings' },
+        { ...nav[2].items[1], label: lang === 'id' ? 'Permintaan' : 'Requests' },
+        { ...nav[2].items[2], label: t.nav.reports },
+        { ...nav[2].items[3], label: 'Pengeluaran' },
+        { ...nav[2].items[4], label: lang === 'id' ? 'Pengaturan' : 'Settings' },
       ],
     },
   ]
@@ -112,7 +151,12 @@ export default function Sidebar() {
                   onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
                   <span style={{ opacity: active ? 1 : item.disabled ? 0.3 : 0.7, flexShrink: 0 }}>{item.icon}</span>
-                  {item.label}
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {item.href === '/jadwal/permintaan' && pendingCount > 0 && (
+                    <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: '#E05252', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  )}
                 </Link>
               )
             })}
