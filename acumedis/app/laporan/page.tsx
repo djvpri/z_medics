@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import { mockSessions, mockPatients } from '@/lib/mock-data'
@@ -165,9 +166,15 @@ export default function LaporanPage() {
       <Topbar
         title={t.report.title}
         actions={
-          <button onClick={exportCSV} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--ink2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}>
-            {t.common.export}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={exportCSV} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--ink2)', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}>
+              {t.common.export} CSV
+            </button>
+            <Link href={`/laporan-pdf?bulan=${new Date().getMonth() + 1}&tahun=${new Date().getFullYear()}`} target="_blank"
+              style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: 'none', background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>
+              🖨 Export PDF
+            </Link>
+          </div>
         }
       />
 
