@@ -55,7 +55,7 @@ export default function FindPage() {
       c.specialty?.toLowerCase().includes(search.toLowerCase())
     )
     setFiltered(result)
-  }, [province, city, search, clinics])
+  }, [country, city, search, clinics])
 
   const inp: React.CSSProperties = {
     padding: '9px 12px', border: '1px solid #e0dbd4', borderRadius: 8,
