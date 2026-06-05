@@ -131,6 +131,17 @@ export async function getPatientLastTonguePhoto(patientId: string) {
   return data?.[0] ?? null
 }
 
+// ── Low stock items ───────────────────────────────────────────
+
+export async function getLowStockItems() {
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase
+    .from('stock_items')
+    .select('id, name, category, quantity, min_quantity, unit')
+    .order('quantity')
+  return (data ?? []).filter((i: any) => i.quantity <= i.min_quantity)
+}
+
 // ── Follow-up reminders ───────────────────────────────────────
 
 export async function getFollowUpPatients(daysThreshold = 30) {

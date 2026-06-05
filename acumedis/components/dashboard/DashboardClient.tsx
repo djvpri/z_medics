@@ -47,9 +47,10 @@ interface Props {
   todayAppts: any[]
   pendingRequests: any[]
   followUpPatients: { id: string; name: string; phone: string | null; lastDate: string }[]
+  lowStockItems: { id: string; name: string; category: string; quantity: number; min_quantity: number; unit: string }[]
 }
 
-export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts, pendingRequests, followUpPatients }: Props) {
+export default function DashboardClient({ stats, weekAppts, groupedByDay, todayAppts, pendingRequests, followUpPatients, lowStockItems }: Props) {
   const { t, lang } = useT()
 
   const todayLabel = new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', {
@@ -246,6 +247,44 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Alert stok rendah */}
+          {lowStockItems.length > 0 && (
+            <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: `1px solid ${lowStockItems.some(i => i.quantity === 0) ? 'var(--red)' : 'var(--gold)'}` }}>
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border2)', background: lowStockItems.some(i => i.quantity === 0) ? 'var(--red-light)' : 'var(--gold-light)' }}>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 15, color: 'var(--ink)' }}>
+                    {lowStockItems.some(i => i.quantity === 0) ? '🚨' : '⚠️'} {lang === 'id' ? 'Stok Perlu Diisi' : 'Stock Alert'}
+                  </h2>
+                  <p style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>
+                    {lowStockItems.length} {lang === 'id' ? 'item hampir habis atau kosong' : 'items low or out of stock'}
+                  </p>
+                </div>
+                <Link href="/stok" style={{ fontSize: 11, color: 'var(--ink2)', fontWeight: 500, textDecoration: 'none', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: 7 }}>
+                  {lang === 'id' ? 'Kelola stok' : 'Manage stock'}
+                </Link>
+              </div>
+              <div className="px-5 py-1">
+                {lowStockItems.slice(0, 5).map((item, i) => (
+                  <div key={item.id} className="flex items-center justify-between py-2.5"
+                    style={{ borderBottom: i < Math.min(lowStockItems.length, 5) - 1 ? '1px solid var(--border2)' : 'none' }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)' }}>{item.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{item.category}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: item.quantity === 0 ? 'var(--red-light)' : 'var(--gold-light)', color: item.quantity === 0 ? 'var(--red)' : 'var(--gold)' }}>
+                        {item.quantity === 0 ? (lang === 'id' ? 'Habis' : 'Out') : `${item.quantity} ${item.unit}`}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {lowStockItems.length > 5 && (
+                  <p style={{ fontSize: 12, color: 'var(--ink3)', padding: '8px 0', textAlign: 'center' }}>
+                    +{lowStockItems.length - 5} item lainnya — <Link href="/stok" style={{ color: 'var(--accent)', textDecoration: 'none' }}>lihat semua</Link>
+                  </p>
+                )}
               </div>
             </div>
           )}

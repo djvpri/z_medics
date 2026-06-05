@@ -37,6 +37,7 @@ const nav: { section: string; items: NavItem[] }[] = [
       { href: '/jadwal/permintaan', label: 'Permintaan', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 2h12a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 3v-3H2a1 1 0 01-1-1V3a1 1 0 011-1z"/></svg> },
       { href: '/laporan', label: 'Laporan', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 12L6 4l4 5 2-3 2 6"/></svg> },
       { href: '/pengeluaran', label: 'Pengeluaran', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 8h12M8 2v12" strokeLinecap="round"/><circle cx="8" cy="8" r="6"/></svg> },
+      { href: '/stok', label: 'Stok', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><path d="M6 8h4"/></svg> },
       { href: '/pengaturan', label: 'Settings', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.5}><circle cx="8" cy="8" r="2.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M3.1 12.9l1.1-1.1M11.8 4.2l1.1-1.1"/></svg> },
     ],
   },
@@ -46,11 +47,11 @@ export default function Sidebar() {
   const pathname = usePathname()
   const { t, lang, setLang } = useT()
   const [pendingCount, setPendingCount] = useState(0)
+  const [lowStockCount, setLowStockCount] = useState(0)
 
   useEffect(() => {
     const supabase = createClient()
 
-    // Ambil jumlah permintaan pending
     async function fetchPending() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -61,25 +62,35 @@ export default function Sidebar() {
         .eq('status', 'pending')
       setPendingCount(count ?? 0)
     }
-    fetchPending()
 
-    // Realtime — naikkan badge saat ada request baru masuk
+    async function fetchLowStock() {
+      const { data } = await supabase.from('stock_items').select('quantity, min_quantity')
+      const low = (data ?? []).filter((i: any) => i.quantity <= i.min_quantity).length
+      setLowStockCount(low)
+    }
+
+    fetchPending()
+    fetchLowStock()
+
     const channel = supabase
-      .channel('sidebar_requests')
+      .channel('sidebar_badges')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'appointment_requests' },
         () => { setPendingCount(prev => prev + 1) }
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'appointment_requests' },
         () => { fetchPending() }
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_items' },
+        () => { fetchLowStock() }
+      )
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  // Reset badge saat buka halaman permintaan
   useEffect(() => {
     if (pathname === '/jadwal/permintaan') setPendingCount(0)
+    if (pathname === '/stok') setLowStockCount(0)
   }, [pathname])
 
   const navGroups = [
@@ -102,7 +113,8 @@ export default function Sidebar() {
         { ...nav[2].items[1], label: lang === 'id' ? 'Permintaan' : 'Requests' },
         { ...nav[2].items[2], label: t.nav.reports },
         { ...nav[2].items[3], label: 'Pengeluaran' },
-        { ...nav[2].items[4], label: lang === 'id' ? 'Pengaturan' : 'Settings' },
+        { ...nav[2].items[4], label: lang === 'id' ? 'Stok' : 'Stock' },
+        { ...nav[2].items[5], label: lang === 'id' ? 'Pengaturan' : 'Settings' },
       ],
     },
   ]
@@ -155,6 +167,11 @@ export default function Sidebar() {
                   {item.href === '/jadwal/permintaan' && pendingCount > 0 && (
                     <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: '#E05252', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>
                       {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  )}
+                  {item.href === '/stok' && lowStockCount > 0 && (
+                    <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: '#D97706', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>
+                      {lowStockCount > 9 ? '9+' : lowStockCount}
                     </span>
                   )}
                 </Link>
