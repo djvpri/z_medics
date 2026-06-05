@@ -18,6 +18,7 @@ interface Clinic {
   id: string; name: string; clinic_name: string | null; city: string | null
   province: string | null; public_address: string | null; description: string | null
   specialty: string | null; phone_public: string | null; avatar_url?: string | null
+  clinic_photos?: { url: string }[]
 }
 
 function getInitials(name: string) {
@@ -37,7 +38,7 @@ export default function FindPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('practitioners')
-        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, avatar_url')
+        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, avatar_url, clinic_photos(url)')
         .eq('is_listed', true)
         .order('name')
       setClinics(data ?? [])
@@ -121,9 +122,16 @@ export default function FindPage() {
           <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
             {filtered.map(clinic => (
               <Link key={clinic.id} href={`/klinik/${clinic.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 20, cursor: 'pointer', transition: 'box-shadow 0.15s', height: '100%' }}
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.15s', height: '100%' }}
                   onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)')}
                   onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'none')}>
+                  {/* Cover photo */}
+                  {clinic.clinic_photos?.[0]?.url && (
+                    <div style={{ width: '100%', height: 140, overflow: 'hidden' }}>
+                      <img src={clinic.clinic_photos[0].url} alt={clinic.clinic_name ?? clinic.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <div style={{ padding: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                     <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'var(--accent)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {clinic.avatar_url
@@ -162,6 +170,7 @@ export default function FindPage() {
 
                   <div style={{ marginTop: 14, padding: '8px 14px', background: 'var(--accent)', borderRadius: 8, textAlign: 'center', fontSize: 12.5, fontWeight: 500, color: '#F5F0E8' }}>
                     Lihat & Minta Jadwal →
+                  </div>
                   </div>
                 </div>
               </Link>

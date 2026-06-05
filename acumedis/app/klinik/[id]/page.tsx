@@ -8,6 +8,7 @@ interface Clinic {
   id: string; name: string; clinic_name: string | null; city: string | null
   province: string | null; public_address: string | null; description: string | null
   specialty: string | null; phone_public: string | null; email: string; avatar_url?: string | null
+  clinic_photos?: { id: string; url: string }[]
 }
 
 function getInitials(name: string) {
@@ -35,7 +36,7 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
       const supabase = createClient()
       const { data } = await supabase
         .from('practitioners')
-        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, email')
+        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, email, avatar_url, clinic_photos(id, url)')
         .eq('id', id)
         .eq('is_listed', true)
         .single()
@@ -124,6 +125,21 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
 
               {clinic.description && (
                 <p style={{ fontSize: 13.5, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 16 }}>{clinic.description}</p>
+              )}
+
+              {/* Galeri foto */}
+              {clinic.clinic_photos && clinic.clinic_photos.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Foto Klinik</p>
+                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                    {clinic.clinic_photos.map(photo => (
+                      <a key={photo.id} href={photo.url} target="_blank" rel="noopener noreferrer"
+                        style={{ flexShrink: 0, width: 130, height: 90, borderRadius: 10, overflow: 'hidden', display: 'block', border: '1px solid var(--border)', cursor: 'zoom-in' }}>
+                        <img src={photo.url} alt="Foto klinik" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

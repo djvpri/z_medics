@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
 import { createClient } from '@/lib/supabase/client'
 import AvatarUploader from '@/components/ui/AvatarUploader'
+import ClinicPhotoManager from '@/components/ui/ClinicPhotoManager'
 
 const PROVINCES = [
   'Aceh','Sumatera Utara','Sumatera Barat','Riau','Jambi','Sumatera Selatan',
@@ -128,6 +129,13 @@ export default function PengaturanPage() {
                 size={80}
                 onUpload={(url) => set('avatar_url', url)}
               />
+
+              {/* Foto klinik */}
+              {practitionerId && (
+                <div style={{ paddingTop: 16, borderTop: '1px solid var(--border2)' }}>
+                  <ClinicPhotoManager practitionerId={practitionerId} />
+                </div>
+              )}
 
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', marginBottom: 5 }}>Nama Praktisi / Dokter</label>
