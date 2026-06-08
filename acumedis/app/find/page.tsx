@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { toWaLink } from '@/lib/formatMoney'
 
 const COUNTRIES = [
   'Indonesia','Malaysia','Singapore','Brunei','Philippines',
@@ -16,6 +17,7 @@ interface Clinic {
   province: string | null; public_address: string | null; description: string | null
   specialty: string | null; phone_public: string | null; avatar_url?: string | null
   clinic_photos?: { url: string }[]
+  verified: boolean
 }
 
 function getInitials(name: string) {
@@ -33,13 +35,23 @@ export default function FindPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('practitioners')
-        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, avatar_url, clinic_photos(url)')
-        .eq('is_listed', true)
-        .order('name')
-      setClinics(data ?? [])
-      setFiltered(data ?? [])
+      const [{ data: verified }, { data: unverified }] = await Promise.all([
+        supabase
+          .from('practitioners')
+          .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, avatar_url, clinic_photos(url)')
+          .eq('is_listed', true)
+          .order('name'),
+        supabase
+          .from('unverified_clinics')
+          .select('id, name, clinic_name, city, country, public_address, description, specialty, phone_public')
+          .order('name'),
+      ])
+      const merged: Clinic[] = [
+        ...(verified ?? []).map(c => ({ ...c, verified: true })),
+        ...(unverified ?? []).map(c => ({ ...c, province: c.country, avatar_url: null, clinic_photos: [], verified: false })),
+      ].sort((a, b) => (a.clinic_name ?? a.name).localeCompare(b.clinic_name ?? b.name))
+      setClinics(merged)
+      setFiltered(merged)
       setLoading(false)
     }
     load()
@@ -117,9 +129,9 @@ export default function FindPage() {
           </div>
         ) : (
           <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
-            {filtered.map(clinic => (
-              <Link key={clinic.id} href={`/klinik/${clinic.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.15s', height: '100%' }}
+            {filtered.map(clinic => {
+              const card = (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden', cursor: clinic.verified ? 'pointer' : 'default', transition: 'box-shadow 0.15s', height: '100%' }}
                   onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)')}
                   onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'none')}>
                   {/* Cover photo */}
@@ -129,6 +141,11 @@ export default function FindPage() {
                     </div>
                   )}
                   <div style={{ padding: 20 }}>
+                  {!clinic.verified && (
+                    <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: '#FFF3D6', color: '#9A7B1F', marginBottom: 10, letterSpacing: 0.3 }}>
+                      ⚠ Belum Terverifikasi · data publik
+                    </span>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                     <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'var(--accent)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {clinic.avatar_url
@@ -165,13 +182,35 @@ export default function FindPage() {
                     </p>
                   )}
 
-                  <div style={{ marginTop: 14, padding: '8px 14px', background: 'var(--accent)', borderRadius: 8, textAlign: 'center', fontSize: 12.5, fontWeight: 500, color: '#F5F0E8' }}>
-                    Lihat & Minta Jadwal →
-                  </div>
+                  {clinic.verified ? (
+                    <div style={{ marginTop: 14, padding: '8px 14px', background: 'var(--accent)', borderRadius: 8, textAlign: 'center', fontSize: 12.5, fontWeight: 500, color: '#F5F0E8' }}>
+                      Lihat & Minta Jadwal →
+                    </div>
+                  ) : clinic.phone_public ? (
+                    <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+                      <a href={toWaLink(clinic.phone_public)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                        style={{ flex: 1, padding: '8px 10px', background: 'var(--accent)', borderRadius: 8, textAlign: 'center', fontSize: 12, fontWeight: 500, color: '#F5F0E8', textDecoration: 'none' }}>
+                        💬 WhatsApp
+                      </a>
+                      <a href={`tel:${clinic.phone_public.replace(/\D/g, '')}`} onClick={e => e.stopPropagation()}
+                        style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', textDecoration: 'none' }}>
+                        📞 Telepon
+                      </a>
+                    </div>
+                  ) : (
+                    <p style={{ marginTop: 14, fontSize: 11.5, color: 'var(--ink3)', fontStyle: 'italic' }}>
+                      Kontak tidak tersedia — info bersumber dari direktori publik.
+                    </p>
+                  )}
                   </div>
                 </div>
-              </Link>
-            ))}
+              )
+              return clinic.verified ? (
+                <Link key={clinic.id} href={`/klinik/${clinic.id}`} style={{ textDecoration: 'none' }}>{card}</Link>
+              ) : (
+                <div key={clinic.id}>{card}</div>
+              )
+            })}
           </div>
         )}
       </div>
