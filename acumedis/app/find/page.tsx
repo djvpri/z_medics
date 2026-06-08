@@ -24,6 +24,8 @@ function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
+const PAGE_SIZE = 24
+
 export default function FindPage() {
   const [clinics, setClinics] = useState<Clinic[]>([])
   const [filtered, setFiltered] = useState<Clinic[]>([])
@@ -31,6 +33,7 @@ export default function FindPage() {
   const [city, setCity] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   useEffect(() => {
     async function load() {
@@ -67,6 +70,7 @@ export default function FindPage() {
       c.specialty?.toLowerCase().includes(search.toLowerCase())
     )
     setFiltered(result)
+    setVisibleCount(PAGE_SIZE)
   }, [country, city, search, clinics])
 
   const inp: React.CSSProperties = {
@@ -128,8 +132,12 @@ export default function FindPage() {
             </p>
           </div>
         ) : (
+          <>
+          <p style={{ fontSize: 12.5, color: 'var(--ink3)', marginBottom: 16 }}>
+            Menampilkan {Math.min(visibleCount, filtered.length)} dari {filtered.length} klinik
+          </p>
           <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
-            {filtered.map(clinic => {
+            {filtered.slice(0, visibleCount).map(clinic => {
               const card = (
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden', cursor: clinic.verified ? 'pointer' : 'default', transition: 'box-shadow 0.15s', height: '100%' }}
                   onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)')}
@@ -212,6 +220,15 @@ export default function FindPage() {
               )
             })}
           </div>
+          {visibleCount < filtered.length && (
+            <div style={{ textAlign: 'center', marginTop: 28 }}>
+              <button onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+                style={{ padding: '10px 24px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 13.5, fontWeight: 500, cursor: 'pointer' }}>
+                Tampilkan lebih banyak
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>
