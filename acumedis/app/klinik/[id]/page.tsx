@@ -3,11 +3,13 @@
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { toWaLink } from '@/lib/formatMoney'
 
 interface Clinic {
   id: string; name: string; clinic_name: string | null; city: string | null
   province: string | null; public_address: string | null; description: string | null
   specialty: string | null; phone_public: string | null; email: string; avatar_url?: string | null
+  accepts_bookings?: boolean | null
   clinic_photos?: { id: string; url: string }[]
 }
 
@@ -36,7 +38,7 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
       const supabase = createClient()
       const { data } = await supabase
         .from('practitioners')
-        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, email, avatar_url, clinic_photos(id, url)')
+        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, email, avatar_url, accepts_bookings, clinic_photos(id, url)')
         .eq('id', id)
         .eq('is_listed', true)
         .single()
@@ -167,7 +169,33 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
           {/* Form permintaan jadwal */}
           <div>
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: 24 }}>
-              {submitted ? (
+              {clinic.accepts_bookings === false ? (
+                <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                    </svg>
+                  </div>
+                  <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 17, color: 'var(--ink)', marginBottom: 8 }}>Booking Online Belum Tersedia</h2>
+                  <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.6, marginBottom: 18 }}>
+                    Klinik ini belum menerima permintaan jadwal melalui website. Silakan hubungi langsung untuk membuat janji.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {clinic.phone_public && (
+                      <a href={toWaLink(clinic.phone_public)} target="_blank" rel="noreferrer"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 500, textDecoration: 'none', background: 'var(--accent)', color: '#F5F0E8' }}>
+                        💬 Hubungi via WhatsApp
+                      </a>
+                    )}
+                    {clinic.phone_public && (
+                      <a href={`tel:${clinic.phone_public.replace(/\D/g, '')}`}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 500, textDecoration: 'none', border: '1px solid var(--border)', color: 'var(--ink2)' }}>
+                        📞 {clinic.phone_public}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ) : submitted ? (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
                     <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" strokeWidth={2}>

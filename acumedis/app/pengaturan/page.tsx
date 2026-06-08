@@ -25,7 +25,7 @@ export default function PengaturanPage() {
   const [form, setForm] = useState({
     name: '', clinic_name: '', specialty: 'Acupuncture & TCM', city: '', province: '',
     public_address: '', description: '', phone_public: '', is_listed: false, avatar_url: '',
-    default_fee: 0, currency: 'IDR',
+    default_fee: 0, currency: 'IDR', accepts_bookings: true,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -53,6 +53,7 @@ export default function PengaturanPage() {
           description: data.description ?? '',
           phone_public: data.phone_public ?? '',
           is_listed: data.is_listed ?? false,
+          accepts_bookings: data.accepts_bookings ?? true,
         })
       }
       setLoading(false)
@@ -76,6 +77,7 @@ export default function PengaturanPage() {
       description: form.description || null,
       phone_public: form.phone_public || null,
       is_listed: form.is_listed,
+      accepts_bookings: form.accepts_bookings,
       avatar_url: form.avatar_url || null,
       default_fee: form.default_fee || 0,
       currency: form.currency || 'IDR',
@@ -117,6 +119,26 @@ export default function PengaturanPage() {
               <button type="button" onClick={() => set('is_listed', !form.is_listed)}
                 style={{ width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', position: 'relative', background: form.is_listed ? 'var(--accent)' : 'var(--bg2)', transition: 'background 0.2s', flexShrink: 0 }}>
                 <div style={{ position: 'absolute', top: 3, left: form.is_listed ? 25 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+              </button>
+            </div>
+          </div>
+
+          {/* Toggle terima booking online */}
+          <div className="rounded-[18px] p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)', marginBottom: 4 }}>
+                  Terima Permintaan Booking dari Website
+                </p>
+                <p style={{ fontSize: 12.5, color: 'var(--ink3)', lineHeight: 1.6 }}>
+                  {form.accepts_bookings
+                    ? 'Calon pasien bisa mengirim permintaan jadwal langsung dari halaman profil klinik Anda.'
+                    : 'Form permintaan jadwal disembunyikan. Calon pasien akan diarahkan untuk menghubungi Anda langsung via WhatsApp/telepon.'}
+                </p>
+              </div>
+              <button type="button" onClick={() => set('accepts_bookings', !form.accepts_bookings)}
+                style={{ width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', position: 'relative', background: form.accepts_bookings ? 'var(--accent)' : 'var(--bg2)', transition: 'background 0.2s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 3, left: form.accepts_bookings ? 25 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
               </button>
             </div>
           </div>
