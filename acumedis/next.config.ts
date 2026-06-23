@@ -1,7 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: [],
-};
+  images: {
+    remotePatterns: [],
+  },
+}
 
-export default nextConfig;
+export default nextConfig
