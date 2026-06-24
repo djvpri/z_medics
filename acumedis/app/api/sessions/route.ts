@@ -3,11 +3,10 @@ import { requireAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma/client'
 
 export async function GET() {
-  const { error, userId } = await requireAuth()
+  const { error, tenantId } = await requireAuth()
   if (error) return error
-
   const sessions = await prisma.session.findMany({
-    where: { practitionerId: userId! },
+    where: { tenantId: tenantId! },
     include: { patient: { select: { id: true, name: true, gender: true } } },
     orderBy: { sessionDate: 'desc' },
   })
@@ -15,12 +14,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { error, userId } = await requireAuth()
+  const { error, tenantId, userId } = await requireAuth()
   if (error) return error
-
   const body = await req.json()
   const session = await prisma.session.create({
     data: {
+      tenantId: tenantId!,
       practitionerId: userId!,
       patientId: body.patient_id,
       sessionDate: body.session_date ? new Date(body.session_date) : new Date(),

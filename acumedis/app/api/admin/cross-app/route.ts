@@ -11,18 +11,25 @@ function auth(req: NextRequest) {
 export async function GET(req: NextRequest) {
   if (!auth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const practitioners = await prisma.practitioner.findMany({
-    select: { id: true, name: true, email: true, createdAt: true },
+  const tenants = await prisma.tenant.findMany({
+    select: { id: true, name: true, plan: true, isActive: true, expiresAt: true },
     orderBy: { createdAt: 'desc' },
   })
 
-  // ZMedics tidak punya tenant — tiap practitioner adalah 1 akun mandiri
+  const practitioners = await prisma.practitioner.findMany({
+    select: { id: true, name: true, email: true, role: true, tenantId: true, isActive: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
   return NextResponse.json({
-    users: practitioners.map(p => ({
-      id: p.id, name: p.name, email: p.email, active: true,
-      role: 'owner', tenantId: null,
+    tenants: tenants.map(t => ({
+      id: t.id, name: t.name, plan: t.plan, active: t.isActive,
+      expires_at: t.expiresAt?.toISOString() ?? null,
     })),
-    tenants: [],
+    users: practitioners.map(p => ({
+      id: p.id, name: p.name, email: p.email,
+      role: p.role, tenantId: p.tenantId, active: p.isActive,
+    })),
   })
 }
 
@@ -32,43 +39,91 @@ export async function POST(req: NextRequest) {
   const { action, data, email } = await req.json()
 
   if (action === 'createTenant') {
-    // ZMedics tidak punya tenant — buat practitioner baru sebagai gantinya
-    if (!data?.name) return NextResponse.json({ error: 'Nama wajib diisi' }, { status: 400 })
-    const existing = await prisma.practitioner.findFirst({ where: { clinicName: data.name } })
-    if (existing) return NextResponse.json({ error: 'Klinik sudah ada' }, { status: 409 })
-    // Di ZMedics, "tenant" = practitioner dengan clinicName
-    return NextResponse.json({ success: true, id: 'zmedics-no-tenant', name: data.name })
+    if (!data?.name) return NextResponse.json({ error: 'Nama klinik wajib diisi' }, { status: 400 })
+    const tenant = await prisma.tenant.create({
+      data: {
+        name: data.name,
+        plan: data.plan || 'starter',
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : new Date(Date.now() + 30 * 24 * 3600 * 1000),
+      }
+    })
+    return NextResponse.json({ success: true, id: tenant.id })
   }
 
   if (action === 'updateTenant') {
+    const tenantId = data?.id
+    if (!tenantId) return NextResponse.json({ error: 'ID tenant wajib' }, { status: 400 })
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        name: data.name,
+        plan: data.plan,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
+      }
+    })
     return NextResponse.json({ success: true })
   }
 
-  if (action === 'updateRole') {
-    return NextResponse.json({ success: true }) // ZMedics hanya punya role owner
-  }
-
-  if (action === 'moveTenant') {
-    return NextResponse.json({ success: true }) // tidak relevan di ZMedics
-  }
-
-  if (action === 'create') {
-    const exists = await prisma.practitioner.findUnique({ where: { email: data.email } })
-    if (exists) return NextResponse.json({ error: 'Email sudah digunakan' }, { status: 409 })
-    const passwordHash = await bcrypt.hash(data.password || 'changeme123', 10)
-    const user = await prisma.practitioner.create({
-      data: { name: data.name, email: data.email, password: passwordHash },
-    })
-    return NextResponse.json({ success: true, id: user.id })
-  }
-
   if (action === 'delete') {
-    await prisma.practitioner.deleteMany({ where: { email: email || data?.email } })
+    // Soft delete tenant atau user
+    const userEmail = email || data?.email
+    if (userEmail) {
+      await prisma.practitioner.updateMany({ where: { email: userEmail }, data: { isActive: false } })
+    } else if (data?.tenantId || data?.id) {
+      await prisma.tenant.update({ where: { id: data.tenantId || data.id }, data: { isActive: false } })
+    }
     return NextResponse.json({ success: true })
   }
 
   if (action === 'reactivate') {
-    return NextResponse.json({ success: true }) // tidak ada field nonaktif di ZMedics
+    const userEmail = email || data?.email
+    if (userEmail) {
+      await prisma.practitioner.updateMany({ where: { email: userEmail }, data: { isActive: true } })
+    } else if (data?.tenantId || data?.id) {
+      await prisma.tenant.update({ where: { id: data.tenantId || data.id }, data: { isActive: true } })
+    }
+    return NextResponse.json({ success: true })
+  }
+
+  if (action === 'create') {
+    const userEmail = data?.email
+    if (!userEmail) return NextResponse.json({ error: 'Email wajib diisi' }, { status: 400 })
+    const exists = await prisma.practitioner.findUnique({ where: { email: userEmail } })
+    if (exists) return NextResponse.json({ error: 'Email sudah digunakan' }, { status: 409 })
+
+    // Tentukan tenant
+    let tenantId = data?.tenantId
+    if (!tenantId) {
+      // Buat tenant baru otomatis kalau tidak ada
+      const tenant = await prisma.tenant.create({
+        data: { name: data.name + ' Clinic', plan: 'starter' }
+      })
+      tenantId = tenant.id
+    }
+
+    const passwordHash = await bcrypt.hash(data.password || 'changeme123', 10)
+    const user = await prisma.practitioner.create({
+      data: { name: data.name, email: userEmail, password: passwordHash, tenantId, role: 'owner' }
+    })
+    return NextResponse.json({ success: true, id: user.id })
+  }
+
+  if (action === 'updateRole') {
+    const userEmail = email || data?.email
+    const role = data?.role
+    if (!userEmail || !role) return NextResponse.json({ error: 'email dan role wajib' }, { status: 400 })
+    const validRoles = ['owner', 'practitioner', 'admin']
+    if (!validRoles.includes(role)) return NextResponse.json({ error: `Role tidak valid: ${validRoles.join(', ')}` }, { status: 400 })
+    await prisma.practitioner.updateMany({ where: { email: userEmail }, data: { role: role as any } })
+    return NextResponse.json({ success: true })
+  }
+
+  if (action === 'moveTenant') {
+    const userEmail = email || data?.email
+    const newTenantId = data?.tenantId
+    if (!userEmail || !newTenantId) return NextResponse.json({ error: 'email dan tenantId wajib' }, { status: 400 })
+    await prisma.practitioner.updateMany({ where: { email: userEmail }, data: { tenantId: newTenantId } })
+    return NextResponse.json({ success: true })
   }
 
   return NextResponse.json({ error: 'Action tidak dikenal' }, { status: 400 })

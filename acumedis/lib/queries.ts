@@ -13,7 +13,7 @@ function calcAge(birthDate?: Date | null): number | undefined {
 function mapPatient(p: any): Patient {
   return {
     id: p.id,
-    practitioner_id: p.practitionerId,
+    practitioner_id: p.tenantId, // backward compat
     name: p.name,
     gender: p.gender,
     birth_date: p.birthDate?.toISOString().slice(0, 10),
@@ -31,7 +31,7 @@ function mapSession(s: any): Session {
   return {
     id: s.id,
     patient_id: s.patientId,
-    practitioner_id: s.practitionerId,
+    practitioner_id: s.practitionerId ?? s.tenantId,
     session_date: s.sessionDate.toISOString(),
     chief_complaint: s.chiefComplaint,
     tongue_color: s.tongueColor,
@@ -52,24 +52,24 @@ function mapSession(s: any): Session {
 
 // ── Patients ──────────────────────────────────────────────────
 
-export async function getPatients(practitionerId: string): Promise<Patient[]> {
+export async function getPatients(tenantId: string): Promise<Patient[]> {
   const data = await prisma.patient.findMany({
-    where: { practitionerId },
+    where: { tenantId },
     include: { _count: { select: { sessions: true } } },
     orderBy: { createdAt: 'desc' },
   })
   return data.map(mapPatient)
 }
 
-export async function getPatient(id: string, practitionerId: string): Promise<Patient | null> {
-  const data = await prisma.patient.findFirst({ where: { id, practitionerId } })
+export async function getPatient(id: string, tenantId: string): Promise<Patient | null> {
+  const data = await prisma.patient.findFirst({ where: { id, tenantId } })
   if (!data) return null
   return mapPatient(data)
 }
 
-export async function getPatientSessions(patientId: string, practitionerId: string): Promise<Session[]> {
+export async function getPatientSessions(patientId: string, tenantId: string): Promise<Session[]> {
   const data = await prisma.session.findMany({
-    where: { patientId, practitionerId },
+    where: { patientId, tenantId },
     orderBy: { sessionDate: 'desc' },
   })
   return data.map(mapSession)
@@ -77,18 +77,18 @@ export async function getPatientSessions(patientId: string, practitionerId: stri
 
 // ── Sessions ──────────────────────────────────────────────────
 
-export async function getSessions(practitionerId: string): Promise<Session[]> {
+export async function getSessions(tenantId: string): Promise<Session[]> {
   const data = await prisma.session.findMany({
-    where: { practitionerId },
+    where: { tenantId },
     include: { patient: { select: { id: true, name: true, gender: true } } },
     orderBy: { sessionDate: 'desc' },
   })
   return data.map(mapSession)
 }
 
-export async function getSession(id: string, practitionerId: string): Promise<Session | null> {
+export async function getSession(id: string, tenantId: string): Promise<Session | null> {
   const data = await prisma.session.findFirst({
-    where: { id, practitionerId },
+    where: { id, tenantId },
     include: { patient: true },
   })
   if (!data) return null
@@ -97,9 +97,9 @@ export async function getSession(id: string, practitionerId: string): Promise<Se
 
 // ── Appointment requests ──────────────────────────────────────
 
-export async function getPendingRequests(practitionerId: string) {
+export async function getPendingRequests(tenantId: string) {
   return prisma.appointmentRequest.findMany({
-    where: { practitionerId, status: 'pending' },
+    where: { tenantId, status: 'pending' },
     orderBy: { createdAt: 'desc' },
     take: 5,
   })
@@ -115,20 +115,15 @@ export async function getLastTonguePhoto(sessionId: string) {
   })
 }
 
-export async function getPatientLastTonguePhoto(patientId: string, practitionerId: string) {
+export async function getPatientLastTonguePhoto(patientId: string, tenantId: string) {
   const sessions = await prisma.session.findMany({
-    where: { patientId, practitionerId },
+    where: { patientId, tenantId },
     select: { id: true },
   })
   if (!sessions.length) return null
-
   const sessionIds = sessions.map(s => s.id)
   const photo = await prisma.sessionPhoto.findFirst({
-    where: {
-      sessionId: { in: sessionIds },
-      photoType: 'tongue',
-      aiAnalysis: { not: null },
-    },
+    where: { sessionId: { in: sessionIds }, photoType: 'tongue', aiAnalysis: { not: null } },
     select: { id: true, aiAnalysis: true, photoBase64: true, sessionId: true, createdAt: true },
     orderBy: { createdAt: 'desc' },
   })
@@ -141,9 +136,9 @@ export async function getPatientLastTonguePhoto(patientId: string, practitionerI
 
 // ── Low stock items ───────────────────────────────────────────
 
-export async function getLowStockItems(practitionerId: string) {
+export async function getLowStockItems(tenantId: string) {
   const items = await prisma.stockItem.findMany({
-    where: { practitionerId },
+    where: { tenantId },
     select: { id: true, name: true, category: true, quantity: true, minQuantity: true, unit: true },
     orderBy: { quantity: 'asc' },
   })
@@ -152,14 +147,13 @@ export async function getLowStockItems(practitionerId: string) {
 
 // ── Follow-up reminders ───────────────────────────────────────
 
-export async function getFollowUpPatients(practitionerId: string, daysThreshold = 30) {
+export async function getFollowUpPatients(tenantId: string, daysThreshold = 30) {
   const sessions = await prisma.session.findMany({
-    where: { practitionerId },
+    where: { tenantId },
     include: { patient: { select: { id: true, name: true, phone: true } } },
     orderBy: { sessionDate: 'desc' },
     take: 500,
   })
-
   const lastSeen: Record<string, { id: string; name: string; phone: string | null; lastDate: string }> = {}
   for (const s of sessions) {
     if (!lastSeen[s.patientId]) {
@@ -169,10 +163,8 @@ export async function getFollowUpPatients(practitionerId: string, daysThreshold 
       }
     }
   }
-
   const threshold = new Date()
   threshold.setDate(threshold.getDate() - daysThreshold)
-
   return Object.values(lastSeen)
     .filter(p => new Date(p.lastDate) < threshold)
     .sort((a, b) => new Date(a.lastDate).getTime() - new Date(b.lastDate).getTime())
@@ -181,52 +173,35 @@ export async function getFollowUpPatients(practitionerId: string, daysThreshold 
 
 // ── Week appointments ─────────────────────────────────────────
 
-export async function getWeekAppointments(practitionerId: string) {
+export async function getWeekAppointments(tenantId: string) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const end = new Date(today); end.setDate(end.getDate() + 7); end.setHours(23, 59, 59, 999)
-
   const data = await prisma.appointment.findMany({
-    where: {
-      practitionerId,
-      scheduledAt: { gte: today, lte: end },
-      status: { not: 'cancelled' },
-    },
+    where: { tenantId, scheduledAt: { gte: today, lte: end }, status: { not: 'cancelled' } },
     include: { patient: { select: { id: true, name: true } } },
     orderBy: { scheduledAt: 'asc' },
   })
-
   return data.map(a => ({
-    id: a.id,
-    scheduled_at: a.scheduledAt.toISOString(),
-    duration_minutes: a.durationMinutes,
-    reason: a.reason,
-    status: a.status,
-    session_id: a.sessionId,
-    external_name: a.externalName,
-    external_phone: a.externalPhone,
+    id: a.id, scheduled_at: a.scheduledAt.toISOString(),
+    duration_minutes: a.durationMinutes, reason: a.reason, status: a.status,
+    session_id: a.sessionId, external_name: a.externalName, external_phone: a.externalPhone,
     patient: a.patient ? { id: a.patient.id, name: a.patient.name } : null,
   }))
 }
 
 // ── Dashboard stats ───────────────────────────────────────────
 
-export async function getDashboardStats(practitionerId: string) {
+export async function getDashboardStats(tenantId: string) {
   const now = new Date()
   const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0)
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-
   const [totalPatients, totalSessions, todaySessions, newPatients, paidSessions] = await Promise.all([
-    prisma.patient.count({ where: { practitionerId } }),
-    prisma.session.count({ where: { practitionerId } }),
-    prisma.session.count({ where: { practitionerId, sessionDate: { gte: todayStart } } }),
-    prisma.patient.count({ where: { practitionerId, createdAt: { gte: monthStart } } }),
-    prisma.session.findMany({
-      where: { practitionerId, paymentStatus: 'paid', sessionDate: { gte: monthStart } },
-      select: { fee: true },
-    }),
+    prisma.patient.count({ where: { tenantId } }),
+    prisma.session.count({ where: { tenantId } }),
+    prisma.session.count({ where: { tenantId, sessionDate: { gte: todayStart } } }),
+    prisma.patient.count({ where: { tenantId, createdAt: { gte: monthStart } } }),
+    prisma.session.findMany({ where: { tenantId, paymentStatus: 'paid', sessionDate: { gte: monthStart } }, select: { fee: true } }),
   ])
-
   const monthIncome = paidSessions.reduce((sum, s) => sum + (s.fee ?? 0), 0)
-
   return { totalPatients, totalSessions, todaySessions, newPatients, monthIncome }
 }

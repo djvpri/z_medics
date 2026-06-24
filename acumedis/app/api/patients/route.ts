@@ -3,16 +3,14 @@ import { requireAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma/client'
 
 export async function GET() {
-  const { error, userId } = await requireAuth()
+  const { error, tenantId } = await requireAuth()
   if (error) return error
-
   const patients = await prisma.patient.findMany({
-    where: { practitionerId: userId! },
+    where: { tenantId: tenantId! },
     include: { _count: { select: { sessions: true } } },
     orderBy: { createdAt: 'desc' },
   })
-
-  return NextResponse.json(patients.map((p: any) => ({
+  return NextResponse.json(patients.map(p => ({
     ...p,
     avatar_url: p.avatarBase64 ? `data:image/jpeg;base64,${p.avatarBase64}` : null,
     avatarBase64: undefined,
@@ -22,13 +20,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { error, userId } = await requireAuth()
+  const { error, tenantId } = await requireAuth()
   if (error) return error
-
   const body = await req.json()
   const patient = await prisma.patient.create({
     data: {
-      practitionerId: userId!,
+      tenantId: tenantId!,
       name: body.name,
       gender: body.gender,
       birthDate: body.birth_date ? new Date(body.birth_date) : undefined,

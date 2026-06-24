@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function requireAuth() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
-    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), userId: null }
+    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), userId: null, tenantId: null }
   }
-  return { error: null, userId: session.user.id }
+  return { error: null, userId: session.user.id, tenantId: session.user.tenantId || null }
 }
