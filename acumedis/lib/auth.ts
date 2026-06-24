@@ -1,12 +1,10 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
-import { jwtVerify } from 'jose'
+import jwt from 'jsonwebtoken'
 import { prisma } from './prisma/client'
 
-const CROSS_APP_SECRET = new TextEncoder().encode(
-  process.env.CROSS_APP_SECRET || 'z-ecosystem-admin-2026'
-)
+const CROSS_APP_SECRET = process.env.CROSS_APP_SECRET || 'z-ecosystem-admin-2026'
 
 declare module 'next-auth' {
   interface User { id: string; name?: string | null; email?: string | null; tenantId?: string; role?: string }
@@ -31,7 +29,7 @@ export const authOptions: NextAuthOptions = {
         // SSO dari Z One
         if ((credentials as any).ssoToken) {
           try {
-            const { payload } = await jwtVerify((credentials as any).ssoToken, CROSS_APP_SECRET)
+            const payload = jwt.verify((credentials as any).ssoToken, CROSS_APP_SECRET) as any
             if (payload.app !== 'zmedics') return null
             const email = String(payload.email || '')
             const user = await prisma.practitioner.findUnique({
