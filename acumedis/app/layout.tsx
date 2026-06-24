@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
-import { SessionProvider } from 'next-auth/react'
+import { Providers } from '@/components/Providers'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -32,9 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="id" className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}>
       <body className="min-h-full">
-        <SessionProvider>
+        <Providers>
           <LanguageProvider>{children}</LanguageProvider>
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   )

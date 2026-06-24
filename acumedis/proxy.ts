@@ -1,16 +1,18 @@
-import { withAuth } from 'next-auth/middleware'
+import { withAuth, NextRequestWithAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 
-export const proxy = withAuth(
-  function proxy(req) {
-    return NextResponse.next()
-  },
-  {
-    pages: {
-      signIn: '/login',
-    },
+export async function proxy(req: NextRequestWithAuth) {
+  const token = req.nextauth?.token
+  if (!token) {
+    const loginUrl = new URL('/login', req.url)
+    return NextResponse.redirect(loginUrl)
   }
-)
+  return NextResponse.next()
+}
+
+export default withAuth(proxy, {
+  pages: { signIn: '/login' },
+})
 
 export const config = {
   matcher: [
@@ -27,10 +29,5 @@ export const config = {
     '/ai/:path*',
     '/klinik/:path*',
     '/kwitansi/:path*',
-    '/api/me',
-    '/api/patients/:path*',
-    '/api/sessions/:path*',
-    '/api/session-photos/:path*',
-    '/api/clinic-photos/:path*',
   ],
 }
