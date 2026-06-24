@@ -152,7 +152,7 @@ export default function PengaturanPage() {
             <div className="p-5 space-y-4">
               {/* Avatar */}
               <AvatarUploader
-                currentUrl={form.avatar_url || null}
+                currentUrl={form.avatar_url || undefined}
                 name={form.name || 'DR'}
                 size={80}
                 onUpload={(url) => set('avatar_url', url)}

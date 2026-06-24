@@ -69,7 +69,7 @@ export default function TambahPasienPage() {
             <div className="p-4 md:p-6">
               <div className="mb-5">
                 <AvatarUploader
-                  currentUrl={form.avatar_url || null}
+                  currentUrl={form.avatar_url || undefined}
                   name={form.name || '?'}
                   size={72}
                   filePrefix="patient"

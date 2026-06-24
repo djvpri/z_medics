@@ -1,15 +1,24 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface ClinicPhoto { id: string; photoBase64: string; caption?: string | null; createdAt: string }
-interface Props { photos: ClinicPhoto[] }
+interface Props { 
+  photos?: ClinicPhoto[]
+  practitionerId?: string  // props lama — fetch sendiri
+}
 
-export function ClinicPhotoManager({ photos: initialPhotos }: Props) {
+export function ClinicPhotoManager({ photos: initialPhotos, practitionerId }: Props) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
-  const [photos, setPhotos] = useState(initialPhotos)
+  const [photos, setPhotos] = useState<ClinicPhoto[]>(initialPhotos || [])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (practitionerId && !initialPhotos) {
+      fetch('/api/clinic-photos').then(r => r.json()).then(setPhotos).catch(() => {})
+    }
+  }, [practitionerId, initialPhotos])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -25,6 +34,8 @@ export function ClinicPhotoManager({ photos: initialPhotos }: Props) {
           body: JSON.stringify({ photoBase64: base64 }),
         })
         if (!res.ok) throw new Error('Gagal upload')
+        const photo = await res.json()
+        setPhotos(p => [...p, photo])
         router.refresh()
       }
       reader.readAsDataURL(file)
@@ -50,8 +61,7 @@ export function ClinicPhotoManager({ photos: initialPhotos }: Props) {
             </button>
           </div>
         ))}
-        <button onClick={() => inputRef.current?.click()}
-          disabled={loading}
+        <button onClick={() => inputRef.current?.click()} disabled={loading}
           className="aspect-square rounded-xl border-2 border-dashed border-gray-300 hover:border-teal-400 flex items-center justify-center text-gray-400 text-2xl">
           {loading ? '...' : '+'}
         </button>
@@ -60,4 +70,5 @@ export function ClinicPhotoManager({ photos: initialPhotos }: Props) {
     </div>
   )
 }
+
 export default ClinicPhotoManager

@@ -83,7 +83,7 @@ export default function EditPasienPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="p-4 md:p-6 space-y-4">
               <AvatarUploader
-                currentUrl={form.avatar_url || null}
+                currentUrl={form.avatar_url || undefined}
                 name={form.name || '?'}
                 size={72}
                 filePrefix={`patient-${id}`}

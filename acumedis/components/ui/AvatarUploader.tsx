@@ -3,16 +3,21 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
-  currentUrl?: string
-  table: 'practitioners' | 'patients'
-  id: string
+  currentUrl?: string | null
   size?: number
+  // Props baru (pakai API)
+  table?: 'practitioners' | 'patients'
+  id?: string
+  // Props lama (pakai callback)
+  name?: string
+  filePrefix?: string
+  onUpload?: (url: string) => void
 }
 
-export function AvatarUploader({ currentUrl, table, id, size = 80 }: Props) {
+export function AvatarUploader({ currentUrl, size = 80, table, id, name, onUpload }: Props) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
-  const [preview, setPreview] = useState(currentUrl)
+  const [preview, setPreview] = useState(currentUrl || undefined)
   const [loading, setLoading] = useState(false)
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -22,15 +27,22 @@ export function AvatarUploader({ currentUrl, table, id, size = 80 }: Props) {
     try {
       const reader = new FileReader()
       reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1]
-        setPreview(reader.result as string)
-        const res = await fetch(`/api/${table}/${id}/avatar`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ avatarBase64: base64 }),
-        })
-        if (!res.ok) throw new Error('Gagal upload avatar')
-        router.refresh()
+        const dataUrl = reader.result as string
+        const base64 = dataUrl.split(',')[1]
+        setPreview(dataUrl)
+
+        if (table && id) {
+          // Mode baru: simpan ke API
+          await fetch(`/api/${table}/${id}/avatar`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatarBase64: base64 }),
+          })
+          router.refresh()
+        } else if (onUpload) {
+          // Mode lama: panggil callback dengan data URL
+          onUpload(dataUrl)
+        }
       }
       reader.readAsDataURL(file)
     } catch {
@@ -40,6 +52,8 @@ export function AvatarUploader({ currentUrl, table, id, size = 80 }: Props) {
     }
   }
 
+  const initials = name ? name.slice(0, 2).toUpperCase() : '?'
+
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <div onClick={() => inputRef.current?.click()}
@@ -47,7 +61,7 @@ export function AvatarUploader({ currentUrl, table, id, size = 80 }: Props) {
         {preview ? (
           <img src={preview} alt="Avatar" className="w-full h-full object-cover" />
         ) : (
-          <span className="text-gray-400 text-2xl">+</span>
+          <span className="text-gray-500 font-medium text-sm">{initials}</span>
         )}
         {loading && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
@@ -59,4 +73,5 @@ export function AvatarUploader({ currentUrl, table, id, size = 80 }: Props) {
     </div>
   )
 }
+
 export default AvatarUploader
