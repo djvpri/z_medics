@@ -2,20 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma/client'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireAuth()
   if (error) return error
-  const session = await prisma.session.findFirst({ where: { id: params.id, practitionerId: userId! }, include: { patient: true, photos: true } })
+  const session = await prisma.session.findFirst({ where: { id: (await params).id, practitionerId: userId! }, include: { patient: true, photos: true } })
   if (!session) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(session)
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireAuth()
   if (error) return error
   const body = await req.json()
   await prisma.session.updateMany({
-    where: { id: params.id, practitionerId: userId! },
+    where: { id: (await params).id, practitionerId: userId! },
     data: {
       chiefComplaint: body.chief_complaint,
       tongueColor: body.tongue_color,
@@ -34,9 +34,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ success: true })
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireAuth()
   if (error) return error
-  await prisma.session.deleteMany({ where: { id: params.id, practitionerId: userId! } })
+  await prisma.session.deleteMany({ where: { id: (await params).id, practitionerId: userId! } })
   return NextResponse.json({ success: true })
 }
