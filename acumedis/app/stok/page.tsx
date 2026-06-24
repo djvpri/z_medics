@@ -1,8 +1,9 @@
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 'use client'
 
 import { useState, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 
 const CATEGORIES = ['Herbal', 'Jarum', 'Peralatan', 'Suplemen', 'Lainnya']
 const UNITS = ['pcs', 'gram', 'ml', 'botol', 'sachet', 'lembar', 'bungkus', 'kapsul']

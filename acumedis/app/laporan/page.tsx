@@ -1,9 +1,10 @@
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { mockSessions, mockPatients } from '@/lib/mock-data'
 import { useT } from '@/contexts/LanguageContext'
 import { formatMoneyShort, formatMoney } from '@/lib/formatMoney'

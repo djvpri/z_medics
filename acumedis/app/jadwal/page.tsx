@@ -1,10 +1,11 @@
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { useT } from '@/contexts/LanguageContext'
 
 const DAYS_SHORT_ID = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']

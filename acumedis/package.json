@@ -14,8 +14,6 @@
     "@ai-sdk/google": "^3.0.80",
     "@ai-sdk/openai": "^3.0.67",
     "@prisma/client": "5.22.0",
-    "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.106.2",
     "@types/bcryptjs": "^2.4.6",
     "ai": "^6.0.193",
     "bcryptjs": "^3.0.3",

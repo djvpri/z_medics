@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useT } from '@/contexts/LanguageContext'
-import { createClient } from '@/lib/supabase/client'
+import { useSession, signOut } from 'next-auth/react'
 
 interface NavItem {
   href: string
@@ -48,45 +48,19 @@ export default function Sidebar() {
   const { t, lang, setLang } = useT()
   const [pendingCount, setPendingCount] = useState(0)
   const [lowStockCount, setLowStockCount] = useState(0)
+  const { data: session } = useSession()
 
   useEffect(() => {
-    const supabase = createClient()
+    if (!session?.user?.id) return
 
-    async function fetchPending() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { count } = await supabase
-        .from('appointment_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('practitioner_id', user.id)
-        .eq('status', 'pending')
-      setPendingCount(count ?? 0)
-    }
+    // Ambil pending requests
+    fetch('/api/appointments/pending-count')
+      .then(r => r.json()).then(d => setPendingCount(d.count ?? 0)).catch(() => {})
 
-    async function fetchLowStock() {
-      const { data } = await supabase.from('stock_items').select('quantity, min_quantity')
-      const low = (data ?? []).filter((i: any) => i.quantity <= i.min_quantity).length
-      setLowStockCount(low)
-    }
-
-    fetchPending()
-    fetchLowStock()
-
-    const channel = supabase
-      .channel('sidebar_badges')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'appointment_requests' },
-        () => { setPendingCount(prev => prev + 1) }
-      )
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'appointment_requests' },
-        () => { fetchPending() }
-      )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_items' },
-        () => { fetchLowStock() }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [])
+    // Ambil low stock
+    fetch('/api/stock/low-count')
+      .then(r => r.json()).then(d => setLowStockCount(d.count ?? 0)).catch(() => {})
+  }, [session])
 
   useEffect(() => {
     if (pathname === '/jadwal/permintaan') setPendingCount(0)
@@ -209,49 +183,41 @@ export default function Sidebar() {
 }
 
 function UserFooter() {
-  const [user, setUser] = useState<{ name: string; email: string; initials: string; avatarUrl?: string | null } | null>(null)
+  const { data: session } = useSession()
+  const [userData, setUserData] = useState<{ name: string; email: string; initials: string; avatarUrl?: string | null } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      const supabase = createClient()
-      supabase.auth.getUser().then(async ({ data: { user } }) => {
-        if (user) {
-          const name = user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'Dokter'
-          const initials = name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
-          const { data: prac } = await supabase.from('practitioners').select('name, avatar_url').eq('id', user.id).single()
-          setUser({
-            name: prac?.name ?? name,
-            email: user.email ?? '',
-            initials,
-            avatarUrl: prac?.avatar_url ?? null,
-          })
-        }
+    if (!session?.user) return
+    fetch('/api/me').then(r => r.json()).then(d => {
+      const name = d.name ?? session.user?.name ?? 'Dokter'
+      const initials = name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+      setUserData({
+        name,
+        email: d.email ?? session.user?.email ?? '',
+        initials,
+        avatarUrl: d.avatar_url ?? null,
       })
-    })
-  }, [])
+    }).catch(() => {})
+  }, [session])
 
   async function logout() {
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    await signOut({ callbackUrl: '/login' })
   }
 
   return (
     <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg group" style={{ transition: 'background 0.15s' }}>
       <div className="flex items-center justify-center rounded-full flex-shrink-0 overflow-hidden" style={{ width: 30, height: 30, background: 'var(--accent)', fontSize: 12, fontWeight: 500, color: '#F5F0E8' }}>
-        {user?.avatarUrl
-          ? <img src={user.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : (user?.initials ?? 'DR')}
+        {userData?.avatarUrl
+          ? <img src={userData.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : (userData?.initials ?? 'DR')}
       </div>
       <div className="flex-1 min-w-0">
         <div style={{ fontSize: 12, color: 'rgba(245,240,232,0.85)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {user?.name ?? 'Dr. Rahma Susanti'}
+          {userData?.name ?? 'Dokter'}
         </div>
         <div style={{ fontSize: 10, color: 'rgba(245,240,232,0.35)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {user?.email ?? 'Akupunturis'}
+          {userData?.email ?? ''}
         </div>
       </div>
       <button

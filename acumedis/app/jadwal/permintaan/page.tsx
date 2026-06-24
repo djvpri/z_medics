@@ -1,9 +1,10 @@
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { useT } from '@/contexts/LanguageContext'
 
 interface Request {

@@ -1,5 +1,5 @@
 import DashboardClient from '@/components/dashboard/DashboardClient'
-import { getDashboardStats, getWeekAppointments, getPendingRequests, getFollowUpPatients, getLowStockItems } from '@/lib/supabase/queries'
+import { getDashboardStats, getWeekAppointments, getPendingRequests, getFollowUpPatients, getLowStockItems } from '@/lib/queries'
 
 export default async function DashboardPage() {
   const [stats, weekAppts, pendingRequests, followUpPatients, lowStockItems] = await Promise.all([
