@@ -1,4 +1,16 @@
-export { default } from 'next-auth/middleware'
+import { withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server'
+
+export const proxy = withAuth(
+  function proxy(req) {
+    return NextResponse.next()
+  },
+  {
+    pages: {
+      signIn: '/login',
+    },
+  }
+)
 
 export const config = {
   matcher: [
