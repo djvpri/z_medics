@@ -1,5 +1,3 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 'use client'
 
 import { useState, useEffect } from 'react'
