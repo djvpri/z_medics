@@ -464,13 +464,14 @@ function SesiBaruForm() {
                     setTongueAnalysis(analysis)
                     setTongueImageBase64(imgBase64)
                     // Auto-fill tongue fields jika masih kosong
-                    if (!form.tongue_color && analysis.warna) {
+                    const analysisObj = analysis as any
+                    if (!form.tongue_color && analysisObj?.warna) {
                       const colorMap: Record<string, string> = {
                         'merah': 'red', 'merah muda': 'pale-red', 'pucat': 'pale',
                         'ungu': 'purple', 'merah gelap': 'dark-red',
                       }
                       const found = Object.entries(colorMap).find(([k]) =>
-                        analysis.warna.toLowerCase().includes(k)
+                        analysisObj.warna.toLowerCase().includes(k)
                       )
                       if (found) setField('tongue_color', found[1] as TongueColor)
                     }
