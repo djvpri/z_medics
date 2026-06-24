@@ -31,6 +31,27 @@ export async function POST(req: NextRequest) {
 
   const { action, data, email } = await req.json()
 
+  if (action === 'createTenant') {
+    // ZMedics tidak punya tenant — buat practitioner baru sebagai gantinya
+    if (!data?.name) return NextResponse.json({ error: 'Nama wajib diisi' }, { status: 400 })
+    const existing = await prisma.practitioner.findFirst({ where: { clinicName: data.name } })
+    if (existing) return NextResponse.json({ error: 'Klinik sudah ada' }, { status: 409 })
+    // Di ZMedics, "tenant" = practitioner dengan clinicName
+    return NextResponse.json({ success: true, id: 'zmedics-no-tenant', name: data.name })
+  }
+
+  if (action === 'updateTenant') {
+    return NextResponse.json({ success: true })
+  }
+
+  if (action === 'updateRole') {
+    return NextResponse.json({ success: true }) // ZMedics hanya punya role owner
+  }
+
+  if (action === 'moveTenant') {
+    return NextResponse.json({ success: true }) // tidak relevan di ZMedics
+  }
+
   if (action === 'create') {
     const exists = await prisma.practitioner.findUnique({ where: { email: data.email } })
     if (exists) return NextResponse.json({ error: 'Email sudah digunakan' }, { status: 409 })
