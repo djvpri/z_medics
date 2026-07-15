@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { addDays, subDays, subHours } from 'date-fns'
 
 export const DEMO_SLUG = 'demo-acumedis'
-export const DEMO_EMAIL = 'demo@acumedis.com'
+export const DEMO_EMAIL = 'demo@zomet.my.id'
 export const DEMO_PASSWORD = 'demo1234'
 
 export async function getOrCreateDemoTenant() {
