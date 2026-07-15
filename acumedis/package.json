@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && prisma generate && next build",
-    "start": "prisma generate && next start",
+    "build": "prisma generate && next build",
+    "start": "prisma migrate deploy && prisma generate && next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },
