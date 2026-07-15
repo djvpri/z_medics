@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </svg>
             <span>
               <strong>Akun Demo</strong> — data ini akan direset secara berkala.
-              Login: <strong>demo@acumedis.com</strong> / <strong>demo1234</strong>
+              Login: <strong>demo@zomet.my.id</strong> / <strong>demo1234</strong>
             </span>
           </span>
           <button

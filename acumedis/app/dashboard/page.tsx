@@ -1,13 +1,20 @@
+import { getServerSession } from 'next-auth'
+import { redirect } from 'next/navigation'
+import { authOptions } from '@/lib/auth'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { getDashboardStats, getWeekAppointments, getPendingRequests, getFollowUpPatients, getLowStockItems } from '@/lib/queries'
 
 export default async function DashboardPage() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.tenantId) redirect('/login')
+  const tenantId = session.user.tenantId
+
   const [stats, weekAppts, pendingRequests, followUpPatients, lowStockItems] = await Promise.all([
-    getDashboardStats().catch(() => null),
-    getWeekAppointments().catch(() => []),
-    getPendingRequests().catch(() => []),
-    getFollowUpPatients(30).catch(() => []),
-    getLowStockItems().catch(() => []),
+    getDashboardStats(tenantId).catch(() => null),
+    getWeekAppointments(tenantId).catch(() => []),
+    getPendingRequests(tenantId).catch(() => []),
+    getFollowUpPatients(tenantId, 30).catch(() => []),
+    getLowStockItems(tenantId).catch(() => []),
   ])
 
   const today = new Date()
