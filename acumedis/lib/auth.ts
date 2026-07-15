@@ -7,11 +7,11 @@ import { prisma } from './prisma/client'
 const CROSS_APP_SECRET = process.env.CROSS_APP_SECRET || 'z-ecosystem-admin-2026'
 
 declare module 'next-auth' {
-  interface User { id: string; name?: string | null; email?: string | null; tenantId?: string; role?: string }
-  interface Session { user: { id: string; name?: string | null; email?: string | null; tenantId?: string; role?: string } }
+  interface User { id: string; name?: string | null; email?: string | null; tenantId?: string; role?: string; isDemo?: boolean }
+  interface Session { user: { id: string; name?: string | null; email?: string | null; tenantId?: string; role?: string; isDemo?: boolean } }
 }
 declare module 'next-auth/jwt' {
-  interface JWT { id: string; tenantId?: string; role?: string }
+  interface JWT { id: string; tenantId?: string; role?: string; isDemo?: boolean }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
               include: { tenant: true }
             })
             if (!user || !user.isActive) return null
-            return { id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, role: user.role }
+            return { id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, role: user.role, isDemo: user.tenant?.isDemo ?? false }
           } catch { return null }
         }
 
@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
         const valid = await bcrypt.compare(credentials.password, user.password)
         if (!valid) return null
 
-        return { id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, role: user.role }
+        return { id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, role: user.role, isDemo: user.tenant?.isDemo ?? false }
       },
     }),
   ],
@@ -62,6 +62,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.tenantId = (user as any).tenantId
         token.role = (user as any).role
+        token.isDemo = (user as any).isDemo
       }
       return token
     },
@@ -70,6 +71,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id
         session.user.tenantId = token.tenantId
         session.user.role = token.role
+        session.user.isDemo = token.isDemo
       }
       return session
     },
