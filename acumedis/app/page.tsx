@@ -32,7 +32,7 @@ export default function LandingPage() {
       { value: '100%', label: id ? 'Gratis untuk pasien' : 'Free for patients' },
       { value: 'AI', label: id ? 'Analisis foto lidah' : 'Tongue photo analysis' },
       { value: 'TCM', label: id ? 'Rekam medis digital' : 'Digital medical record' },
-      { value: '🌍', label: id ? 'Multi-negara & mata uang' : 'Multi-country & currency' },
+      { value: 'INTL', label: id ? 'Multi-negara & mata uang' : 'Multi-country & currency' },
     ],
     howTitle: id ? 'Cara Menemukan Klinik' : 'How to Find a Clinic',
     howSub: id ? '3 langkah mudah untuk pasien di seluruh dunia' : '3 easy steps for patients worldwide',
@@ -56,7 +56,7 @@ export default function LandingPage() {
     ctaRegister2: id ? 'Daftar Gratis Sekarang →' : 'Sign Up Free Now →',
     ctaTitle: id ? 'Mulai Sekarang, Gratis' : 'Get Started, Free',
     ctaDesc: id ? 'Untuk praktisi akupuntur dan TCM yang ingin mengelola klinik lebih modern.' : 'For acupuncture and TCM practitioners who want to manage their clinic more efficiently.',
-    aiPreview: id ? '🤖 AI: Pasien berikutnya memiliki riwayat 8 sesi — rekomendasikan GB20 + LI4' : '🤖 AI: Next patient has 8 session history — recommend GB20 + LI4',
+    aiPreview: id ? '✦ AI: Pasien berikutnya memiliki riwayat 8 sesi — rekomendasikan GB20 + LI4' : '✦ AI: Next patient has 8 session history — recommend GB20 + LI4',
   }
 
   return (

@@ -29,7 +29,9 @@ function SsoContent() {
           </>
         ) : (
           <>
-            <div className="text-4xl mb-4">❌</div>
+            <div className="mb-4" style={{ display: 'flex', justifyContent: 'center' }}>
+              <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#ef4444" strokeWidth={1.5}><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M15 9l-6 6m0-6l6 6"/></svg>
+            </div>
             <p className="text-red-500 font-medium mb-2">Gagal Login</p>
             <p className="text-gray-500 text-sm mb-4">{msg}</p>
             <a href="https://zone.zomet.my.id" className="text-teal-600 text-sm underline">Kembali ke Z One</a>

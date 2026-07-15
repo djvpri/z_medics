@@ -92,7 +92,8 @@ function LaporanPDFContent() {
         </button>
         <button onClick={() => window.print()} disabled={loading}
           style={{ padding: '7px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, border: 'none', background: '#4A8C60', color: '#fff', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}>
-          🖨 Cetak / Simpan PDF
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Cetak / Simpan PDF
         </button>
       </div>
 

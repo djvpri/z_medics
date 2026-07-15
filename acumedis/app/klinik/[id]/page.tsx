@@ -184,13 +184,15 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
                     {clinic.phone_public && (
                       <a href={toWaLink(clinic.phone_public)} target="_blank" rel="noreferrer"
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 500, textDecoration: 'none', background: 'var(--accent)', color: '#F5F0E8' }}>
-                        💬 Hubungi via WhatsApp
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        Hubungi via WhatsApp
                       </a>
                     )}
                     {clinic.phone_public && (
                       <a href={`tel:${clinic.phone_public.replace(/\D/g, '')}`}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 500, textDecoration: 'none', border: '1px solid var(--border)', color: 'var(--ink2)' }}>
-                        📞 {clinic.phone_public}
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        {clinic.phone_public}
                       </a>
                     )}
                   </div>

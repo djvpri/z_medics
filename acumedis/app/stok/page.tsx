@@ -124,7 +124,13 @@ export default function StokPage() {
         {/* Alert banner */}
         {(outCount > 0 || lowCount > 0) && (
           <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: outCount > 0 ? 'var(--red-light)' : 'var(--gold-light)', border: `1px solid ${outCount > 0 ? 'var(--red)' : 'var(--gold)'}` }}>
-            <span style={{ fontSize: 20 }}>{outCount > 0 ? '🚨' : '⚠️'}</span>
+            <span style={{ color: outCount > 0 ? 'var(--red)' : 'var(--gold)', flexShrink: 0 }}>
+              {outCount > 0 ? (
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              ) : (
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              )}
+            </span>
             <div>
               {outCount > 0 && <p style={{ fontWeight: 600, color: 'var(--red)', fontSize: 13.5 }}>{outCount} item stok habis</p>}
               {lowCount - outCount > 0 && <p style={{ fontWeight: 500, color: 'var(--gold)', fontSize: 13 }}>{lowCount - outCount} item hampir habis</p>}

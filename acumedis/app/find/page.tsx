@@ -198,11 +198,13 @@ export default function FindPage() {
                     <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
                       <a href={toWaLink(clinic.phone_public)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
                         style={{ flex: 1, padding: '8px 10px', background: 'var(--accent)', borderRadius: 8, textAlign: 'center', fontSize: 12, fontWeight: 500, color: '#F5F0E8', textDecoration: 'none' }}>
-                        💬 WhatsApp
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        WhatsApp
                       </a>
                       <a href={`tel:${clinic.phone_public.replace(/\D/g, '')}`} onClick={e => e.stopPropagation()}
                         style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--ink2)', textDecoration: 'none' }}>
-                        📞 Telepon
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        Telepon
                       </a>
                     </div>
                   ) : (
