@@ -5,8 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useT } from '@/contexts/LanguageContext'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
-import { mockPatients, mockSessions } from '@/lib/mock-data'
+import { mockSessions } from '@/lib/mock-data'
 import { NewSessionForm, TongueColor, TongueCoating, PulseQuality } from '@/types'
 import TonguePhotoUploader from '@/components/sessions/TonguePhotoUploader'
 
@@ -106,9 +105,7 @@ function SesiBaruForm() {
   const pad = (n: number) => String(n).padStart(2, '0')
   const today = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
 
-  const [patients, setPatients] = useState<{ id: string; name: string }[]>(
-    mockPatients.map(p => ({ id: p.id, name: p.name }))
-  )
+  const [patients, setPatients] = useState<{ id: string; name: string }[]>([])
   const [form, setForm] = useState<NewSessionForm>({
     patient_id: defaultPatient,
     session_date: today,
@@ -138,15 +135,13 @@ function SesiBaruForm() {
   const [aiError, setAiError] = useState('')
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.from('patients').select('id, name').order('name')
-      .then(({ data }) => { if (data && data.length > 0) setPatients(data) })
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        supabase.from('practitioners').select('default_fee').eq('id', user.id).single()
-          .then(({ data }) => { if (data?.default_fee) setField('fee', data.default_fee) })
-      }
-    })
+    fetch('/api/patients')
+      .then(r => r.json())
+      .then((data: { id: string; name: string }[]) => {
+        if (Array.isArray(data) && data.length > 0)
+          setPatients(data.map(p => ({ id: p.id, name: p.name })))
+      })
+      .catch(() => {})
   }, [])
 
   function setField<K extends keyof NewSessionForm>(key: K, value: NewSessionForm[K]) {
@@ -207,56 +202,39 @@ function SesiBaruForm() {
     e.preventDefault()
     if (!form.patient_id || !form.chief_complaint.trim()) return
     setLoading(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const practitioner_id = user?.id ?? process.env.NEXT_PUBLIC_DEV_PRACTITIONER_ID ?? '00000000-0000-0000-0000-000000000001'
     const points = pointsText ? pointsText.split(',').map(p => p.trim()).filter(Boolean) : []
-    const { data: newSesi, error } = await supabase
-      .from('sessions')
-      .insert({ ...form, points_used: points, practitioner_id })
-      .select('id')
-      .single()
-    setLoading(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    try {
+      const res = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, points_used: points }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert('Gagal menyimpan: ' + (err.error ?? res.status))
+        return
+      }
+      const newSesi = await res.json()
 
-    if (newSesi?.id) {
-      // Upload foto lidah + simpan analisis jika ada
-      if (tongueAnalysis) {
-        let storage_path = 'local'
-
-        if (tongueImageBase64) {
-          try {
-            const byteArr = Uint8Array.from(atob(tongueImageBase64), c => c.charCodeAt(0))
-            const blob = new Blob([byteArr], { type: 'image/jpeg' })
-            const filename = `${newSesi.id}-${Date.now()}.jpg`
-            const { data: uploadData } = await supabase.storage
-              .from('tongue-photos')
-              .upload(filename, blob, { contentType: 'image/jpeg', upsert: true })
-            if (uploadData) {
-              const { data: { publicUrl } } = supabase.storage
-                .from('tongue-photos').getPublicUrl(uploadData.path)
-              storage_path = publicUrl
-            }
-          } catch {}
-        }
-
-        await supabase.from('session_photos').insert({
-          session_id: newSesi.id,
-          photo_type: 'tongue',
-          storage_path,
-          ai_analysis: JSON.stringify(tongueAnalysis),
-        })
+      // Simpan foto lidah jika ada
+      if (newSesi?.id && tongueAnalysis && tongueImageBase64) {
+        await fetch('/api/session-photos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: newSesi.id,
+            photoType: 'tongue',
+            photoBase64: tongueImageBase64,
+          }),
+        }).catch(() => {})
       }
 
-      // Tandai jadwal sebagai completed jika berasal dari jadwal
-      if (jadwalId) {
-        await supabase.from('appointments')
-          .update({ status: 'completed', session_id: newSesi.id })
-          .eq('id', jadwalId)
-      }
+      router.push(newSesi?.id ? `/sesi/${newSesi.id}` : '/sesi')
+    } catch (err: any) {
+      alert('Gagal menyimpan: ' + (err?.message ?? 'unknown error'))
+    } finally {
+      setLoading(false)
     }
-
-    router.push(newSesi?.id ? `/sesi/${newSesi.id}` : '/sesi')
   }
 
   // Previous sessions for selected patient
