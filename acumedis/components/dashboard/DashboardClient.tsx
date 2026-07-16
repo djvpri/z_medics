@@ -88,7 +88,7 @@ export default function DashboardClient({ stats, weekAppts, groupedByDay, todayA
         actions={
           <div className="flex items-center gap-3">
             <span className="hidden md:inline" style={{ fontSize: 13, color: "var(--ink3)" }}>{todayLabel}</span>
-            <Link href="/jadwal/baru" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
+            <Link href="/sesi/baru" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--accent)', color: '#F5F0E8', textDecoration: 'none', fontFamily: 'var(--font-dm-sans)' }}>
               + {lang === 'id' ? 'Sesi Baru' : 'New Session'}
             </Link>
           </div>
