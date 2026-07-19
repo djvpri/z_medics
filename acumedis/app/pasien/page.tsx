@@ -105,7 +105,7 @@ export default function PasienPage() {
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center" style={{ color: 'var(--ink3)', fontSize: 13 }}>{t.patient.noPatients}</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 580 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border2)' }}>
                   {[t.patient.name, t.patient.complaint, t.patient.sessions, t.patient.lastSession, t.patient.status].map(h => (

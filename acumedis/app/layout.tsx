@@ -21,16 +21,26 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  themeColor: '#2D5A3D',
 }
 
 export const metadata: Metadata = {
   title: 'Z Medics',
   description: 'Rekam Medis Akupuntur & TCM',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Z Medics',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}>
+      <head>
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
+      </head>
       <body className="min-h-full">
         <Providers>
           <LanguageProvider>{children}</LanguageProvider>

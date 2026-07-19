@@ -270,7 +270,7 @@ function SesiBaruForm() {
                 <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>{t.session.sessionInfo}</h2>
               </div>
               <div className="p-4 md:p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label style={labelStyle}>{t.session.patientLabel}</label>
                     <select value={form.patient_id} onChange={e => setField('patient_id', e.target.value)} required style={selectStyle}
@@ -308,7 +308,7 @@ function SesiBaruForm() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label style={labelStyle}>{t.session.tongueColor}</label>
                     <select value={form.tongue_color ?? ''} onChange={e => setField('tongue_color', (e.target.value as TongueColor) || undefined)} style={selectStyle}
@@ -329,7 +329,7 @@ function SesiBaruForm() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label style={labelStyle}>{t.session.pulseQuality}</label>
                     <select value={form.pulse_quality ?? ''} onChange={e => setField('pulse_quality', (e.target.value as PulseQuality) || undefined)} style={selectStyle}
@@ -367,7 +367,7 @@ function SesiBaruForm() {
               <div className="p-4 md:p-6 space-y-4">
                 <div>
                   <label style={labelStyle}>{t.session.meridian}</label>
-                  <div className="grid grid-cols-6 gap-1.5">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
                     {MERIDIANS.map(m => {
                       const active = selectedMeridians.includes(m.code)
                       return (
@@ -403,7 +403,7 @@ function SesiBaruForm() {
                 <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 16, color: 'var(--ink)' }}>Biaya & Pembayaran</h2>
               </div>
               <div className="p-4 md:p-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label style={labelStyle}>Biaya Terapi (Rp)</label>
                     <input type="number" min={0} step={1000} value={form.fee ?? ''} onChange={e => setField('fee', e.target.value ? Number(e.target.value) : undefined)} placeholder="150000" style={inputStyle}

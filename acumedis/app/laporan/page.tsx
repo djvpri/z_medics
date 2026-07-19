@@ -243,7 +243,8 @@ export default function LaporanPage() {
           {loading ? (
             <div className="py-10 text-center" style={{ fontSize: 13, color: 'var(--ink3)' }}>Memuat...</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 560 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border2)' }}>
                   {[t.report.date, t.report.patient, t.session.chiefComplaint, 'Biaya', 'Status'].map(h => (
@@ -279,6 +280,7 @@ export default function LaporanPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

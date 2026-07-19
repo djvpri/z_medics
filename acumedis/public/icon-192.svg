@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="40" fill="#1C1813"/>
+  <!-- Teal circle background -->
+  <circle cx="96" cy="86" r="58" fill="#2D5A3D" opacity="0.25"/>
+  <!-- Medical cross -->
+  <rect x="80" y="50" width="24" height="72" rx="6" fill="#4A8C60"/>
+  <rect x="60" y="70" width="64" height="24" rx="6" fill="#4A8C60"/>
+  <!-- Z Medics text -->
+  <text x="96" y="168" text-anchor="middle" font-family="Georgia, serif" font-weight="400" font-size="16" fill="#F5F0E8" letter-spacing="1">Z MEDICS</text>
+</svg>

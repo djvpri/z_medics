@@ -12,6 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sessionResult = useSession()
   const [currency, setCurrency] = useState('IDR')
   const [resetting, startTransition] = useTransition()
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const router = useRouter()
 
   const session = sessionResult?.data
@@ -45,7 +46,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <AppContext.Provider value={{ currency }}>
-      <div className="flex h-screen overflow-hidden">
+      {/* Mobile top bar */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4"
+        style={{ height: 52, background: 'var(--ink)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <button
+          onClick={() => setDrawerOpen(true)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label="Menu"
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#F5F0E8" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div style={{ fontFamily: 'var(--font-dm-serif)', fontSize: 18, color: '#F5F0E8', letterSpacing: -0.5 }}>
+          Z Medics
+        </div>
+        <div style={{ width: 36 }} />
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {drawerOpen && (
+        <div className="md:hidden fixed inset-0 z-40 flex">
+          <div
+            className="absolute inset-0"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="relative z-50 flex-shrink-0">
+            <Sidebar onClose={() => setDrawerOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      <div className="flex h-screen overflow-hidden pt-[52px] md:pt-0">
         {/* Sidebar — desktop only */}
         <div className="hidden md:flex flex-shrink-0">
           <Sidebar />
@@ -70,10 +105,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ flexShrink: 0 }}>
                   <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
                 </svg>
-                <span>
+                <span className="hidden sm:inline">
                   <strong>Akun Demo</strong> — data ini akan direset secara berkala.
                   Login: <strong>demo@zomet.my.id</strong> / <strong>demo1234</strong>
                 </span>
+                <span className="sm:hidden"><strong>Akun Demo</strong></span>
               </span>
               <button
                 onClick={handleReset}
@@ -90,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   style={{ animation: resetting ? 'spin 1s linear infinite' : 'none' }}>
                   <path strokeLinecap="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0112.9-5.3M20 15a8 8 0 01-12.9 5.3"/>
                 </svg>
-                {resetting ? 'Mereset...' : 'Reset Data'}
+                {resetting ? 'Mereset...' : 'Reset'}
               </button>
             </div>
           )}

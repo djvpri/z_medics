@@ -43,7 +43,7 @@ const nav: { section: string; items: NavItem[] }[] = [
   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const { t, lang, setLang } = useT()
   const [pendingCount, setPendingCount] = useState(0)
@@ -125,6 +125,7 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.disabled ? '#' : item.href}
+                  onClick={onClose}
                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all"
                   style={{
                     fontSize: 13.5,
