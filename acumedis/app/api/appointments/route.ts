@@ -25,6 +25,8 @@ function map(a: any) {
     session_id: a.sessionId,
     external_name: a.externalName,
     external_phone: a.externalPhone,
+    notes: a.notes,
+    queue_number: a.queueNumber,
     patient: a.patient ? { id: a.patient.id, name: a.patient.name } : null,
   }
 }
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
       status: toPrisma(body.status),
       externalName: body.external_name || null,
       externalPhone: body.external_phone || null,
+      notes: body.notes || null,
     },
   })
   return NextResponse.json(map(appt), { status: 201 })

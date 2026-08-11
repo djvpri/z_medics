@@ -23,6 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     id: a.id, patient_id: a.patientId, scheduled_at: a.scheduledAt.toISOString(),
     duration_minutes: a.durationMinutes, reason: a.reason, status: fromPrisma(a.status),
     session_id: a.sessionId, external_name: a.externalName, external_phone: a.externalPhone,
+    notes: a.notes, queue_number: a.queueNumber,
     patient: a.patient ? { id: a.patient.id, name: a.patient.name } : null,
   })
 }
@@ -38,6 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.scheduled_at !== undefined) data.scheduledAt = new Date(body.scheduled_at)
   if (body.duration_minutes !== undefined) data.durationMinutes = Number(body.duration_minutes)
   if (body.reason !== undefined) data.reason = body.reason || null
+  if (body.notes !== undefined) data.notes = body.notes || null
   if (body.session_id !== undefined) data.sessionId = body.session_id || null
   await prisma.appointment.updateMany({ where: { id, tenantId: tenantId! }, data })
   return NextResponse.json({ success: true })

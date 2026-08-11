@@ -170,6 +170,8 @@ model Appointment {
   status           AppointmentStatus  @default(confirmed)
   externalName     String?
   externalPhone    String?
+  notes            String?            @db.Text
+  queueNumber      Int?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 }
