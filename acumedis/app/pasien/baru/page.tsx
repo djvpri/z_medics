@@ -70,6 +70,7 @@ export default function TambahPasienPage() {
       }
       router.push('/pasien')
     } catch (err) {
+      console.error('[pasien/baru] save failed:', err)
       alert((t as any).common?.saveFailed ?? 'Gagal menyimpan: ' + (err as Error).message)
     } finally {
       setLoading(false)

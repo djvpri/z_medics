@@ -26,17 +26,25 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const { error, tenantId } = await requireAuth()
   if (error) return error
-  const body = await req.json()
-  const patient = await prisma.patient.create({
-    data: {
-      tenantId: tenantId!,
-      name: body.name,
-      gender: body.gender,
-      birthDate: body.birth_date ? new Date(body.birth_date) : undefined,
-      phone: body.phone,
-      email: body.email,
-      address: body.address,
-    },
-  })
-  return NextResponse.json(patient, { status: 201 })
+  try {
+    const body = await req.json()
+    const patient = await prisma.patient.create({
+      data: {
+        tenantId: tenantId!,
+        name: body.name,
+        gender: body.gender,
+        birthDate: body.birth_date ? new Date(body.birth_date) : undefined,
+        phone: body.phone,
+        email: body.email,
+        address: body.address,
+      },
+    })
+    return NextResponse.json(patient, { status: 201 })
+  } catch (err) {
+    console.error('[api/patients] POST create failed:', err)
+    return NextResponse.json(
+      { error: (err as Error).message || 'Gagal menyimpan pasien' },
+      { status: 500 }
+    )
+  }
 }
