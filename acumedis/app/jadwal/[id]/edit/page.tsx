@@ -4,7 +4,6 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { mockPatients } from '@/lib/mock-data'
 
 const inputStyle: React.CSSProperties = {
@@ -33,7 +32,7 @@ export default function EditJadwalPage({ params }: { params: Promise<{ id: strin
     mockPatients.map(p => ({ id: p.id, name: p.name }))
   )
   const [form, setForm] = useState({
-    patient_id: '', scheduled_at: '', duration_minutes: 45, reason: '', notes: '',
+    patient_id: '', scheduled_at: '', duration_minutes: 45, reason: '',
   })
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
@@ -41,19 +40,19 @@ export default function EditJadwalPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const [{ data: appt }, { data: pList }] = await Promise.all([
-        supabase.from('appointments').select('*').eq('id', id).single(),
-        supabase.from('patients').select('id, name').order('name'),
+      const [apptRes, pRes] = await Promise.all([
+        fetch(`/api/appointments/${id}`),
+        fetch('/api/patients'),
       ])
-      if (pList && pList.length > 0) setPatients(pList)
-      if (appt) {
+      const appt = apptRes.ok ? await apptRes.json() : null
+      const pList = pRes.ok ? await pRes.json() : []
+      if (Array.isArray(pList) && pList.length > 0) setPatients(pList.map((p: any) => ({ id: p.id, name: p.name })))
+      if (appt && appt.id) {
         setForm({
           patient_id: appt.patient_id ?? '',
           scheduled_at: appt.scheduled_at?.slice(0, 16) ?? '',
           duration_minutes: appt.duration_minutes ?? 45,
           reason: appt.reason ?? '',
-          notes: appt.notes ?? '',
         })
       }
       setFetching(false)
@@ -67,16 +66,18 @@ export default function EditJadwalPage({ params }: { params: Promise<{ id: strin
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
-    const { error: err } = await supabase.from('appointments').update({
-      patient_id: form.patient_id,
-      scheduled_at: new Date(form.scheduled_at).toISOString(),
-      duration_minutes: form.duration_minutes,
-      reason: form.reason || null,
-      notes: form.notes || null,
-    }).eq('id', id)
+    const res = await fetch(`/api/appointments/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        patient_id: form.patient_id,
+        scheduled_at: new Date(form.scheduled_at).toISOString(),
+        duration_minutes: form.duration_minutes,
+        reason: form.reason || null,
+      }),
+    })
     setLoading(false)
-    if (err) { setError(err.message); return }
+    if (!res.ok) { const b = await res.json().catch(() => ({})); setError(b.error || 'Gagal menyimpan'); return }
     router.push('/jadwal')
     router.refresh()
   }
@@ -129,12 +130,6 @@ export default function EditJadwalPage({ params }: { params: Promise<{ id: strin
                 <input type="text" value={form.reason} onChange={e => set('reason', e.target.value)}
                   placeholder="Contoh: sesi lanjutan, kontrol, dll."
                   style={inputStyle} onFocus={fo} onBlur={bl} />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Catatan (opsional)</label>
-                <textarea value={form.notes} onChange={e => set('notes', e.target.value)}
-                  rows={3} style={{ ...inputStyle, resize: 'none' }} onFocus={fo} onBlur={bl} />
               </div>
 
               {error && (

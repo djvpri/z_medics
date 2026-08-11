@@ -4,7 +4,6 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { mockSessions, mockPatients } from '@/lib/mock-data'
 import { TongueColor, TongueCoating, PulseQuality } from '@/types'
 
@@ -30,14 +29,15 @@ export default function EditSesiPage({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     async function load() {
       try {
-        const supabase = createClient()
-        const [{ data: sesi }, { data: pList }] = await Promise.all([
-          supabase.from('sessions').select('*').eq('id', id).single(),
-          supabase.from('patients').select('id, name').order('name'),
+        const [sesiRes, pRes] = await Promise.all([
+          fetch(`/api/sessions/${id}`),
+          fetch('/api/patients'),
         ])
-        if (pList && pList.length > 0) setPatients(pList)
-        if (sesi) {
-          setForm({ ...sesi, points_used: sesi.points_used?.join(', ') ?? '', session_date: sesi.session_date?.slice(0, 16) ?? '' })
+        const sesi = sesiRes.ok ? await sesiRes.json() : null
+        const pList = pRes.ok ? await pRes.json() : []
+        if (Array.isArray(pList) && pList.length > 0) setPatients(pList.map((p: any) => ({ id: p.id, name: p.name })))
+        if (sesi && sesi.id) {
+          setForm({ ...sesi, patient_id: sesi.patient_id ?? '', points_used: sesi.points_used?.join(', ') ?? '', session_date: sesi.session_date?.slice(0, 16) ?? '' })
         } else {
           const mock = mockSessions.find(s => s.id === id)
           if (mock) setForm({ ...mock, points_used: mock.points_used?.join(', ') ?? '', session_date: mock.session_date?.slice(0, 16) ?? '' })
@@ -59,25 +59,28 @@ export default function EditSesiPage({ params }: { params: Promise<{ id: string 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const supabase = createClient()
     const points = form.points_used ? form.points_used.split(',').map((p: string) => p.trim()).filter(Boolean) : []
-    const { error } = await supabase.from('sessions').update({
-      patient_id: form.patient_id,
-      session_date: form.session_date,
-      chief_complaint: form.chief_complaint,
-      tongue_color: form.tongue_color || null,
-      tongue_coating: form.tongue_coating || null,
-      pulse_quality: form.pulse_quality || null,
-      pain_scale: form.pain_scale ? Number(form.pain_scale) : null,
-      points_used: points,
-      duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
-      notes: form.notes || null,
-      tcm_diagnosis: form.tcm_diagnosis || null,
-      fee: form.fee ? Number(form.fee) : null,
-      payment_status: form.payment_status || null,
-    }).eq('id', id)
+    const res = await fetch(`/api/sessions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        patient_id: form.patient_id || null,
+        session_date: form.session_date,
+        chief_complaint: form.chief_complaint,
+        tongue_color: form.tongue_color || null,
+        tongue_coating: form.tongue_coating || null,
+        pulse_quality: form.pulse_quality || null,
+        pain_scale: form.pain_scale ? Number(form.pain_scale) : null,
+        points_used: points,
+        duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
+        notes: form.notes || null,
+        tcm_diagnosis: form.tcm_diagnosis || null,
+        fee: form.fee ? Number(form.fee) : null,
+        payment_status: form.payment_status || null,
+      }),
+    })
     setLoading(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    if (!res.ok) { alert('Gagal menyimpan sesi'); return }
     router.push(`/sesi/${id}`)
     router.refresh()
   }

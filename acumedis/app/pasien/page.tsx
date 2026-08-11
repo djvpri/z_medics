@@ -47,27 +47,25 @@ export default function PasienPage() {
 
   useEffect(() => {
     async function load() {
+      setLoading(true)
       try {
-        const supabase = createClient()
-        const { data } = await supabase
-          .from('patients')
-          .select('*, sessions(session_date)')
-          .order('created_at', { ascending: false })
-        const rows = data ?? []
-        if (rows.length > 0) {
-          setPatients(rows.map((p: any) => {
-            const sessionDates: string[] = (p.sessions ?? []).map((s: any) => s.session_date).filter(Boolean)
-            const lastDate = sessionDates.sort().reverse()[0]
-            return {
-              ...p,
-              age: calcAge(p.birth_date),
-              total_sessions: sessionDates.length,
-              last_session_date: lastDate ?? undefined,
-            }
-          }))
+        const res = await fetch('/api/patients')
+        if (!res.ok) return
+        const rows = await res.json()
+        if (Array.isArray(rows) && rows.length > 0) {
+          setPatients(rows.map((p: any) => ({
+            ...p,
+            practitioner_id: p.practitioner_id ?? '',
+            created_at: p.created_at ?? '',
+            age: calcAge(p.birth_date),
+            total_sessions: p.total_sessions ?? 0,
+            last_session_date: p.last_session_date ?? undefined,
+          })))
         }
       } catch {
         // keep mock data
+      } finally {
+        setLoading(false)
       }
     }
     load()

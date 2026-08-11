@@ -7,14 +7,15 @@ interface Props {
   id: string
   redirectTo?: string
   label?: string
+  confirmLabel?: string
 }
 
-export function DeleteButton({ table, id, redirectTo, label = 'Hapus' }: Props) {
+export function DeleteButton({ table, id, redirectTo, label = 'Hapus', confirmLabel }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   async function handleDelete() {
-    if (!confirm('Yakin ingin menghapus data ini?')) return
+    if (!confirm(confirmLabel || 'Yakin ingin menghapus data ini?')) return
     setLoading(true)
     try {
       const res = await fetch(`/api/${table}/${id}`, { method: 'DELETE' })

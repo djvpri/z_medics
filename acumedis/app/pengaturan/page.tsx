@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import AvatarUploader from '@/components/ui/AvatarUploader'
 import ClinicPhotoManager from '@/components/ui/ClinicPhotoManager'
 import { useT } from '@/contexts/LanguageContext'
@@ -34,12 +33,10 @@ export default function PengaturanPage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setPractitionerId(user.id)
-      const { data } = await supabase.from('practitioners').select('*').eq('id', user.id).single()
-      if (data) {
+      const res = await fetch('/api/me')
+      const data = res.ok ? await res.json() : null
+      if (data && data.id) {
+        setPractitionerId(data.id)
         setForm({
           name: data.name ?? '',
           clinic_name: data.clinic_name ?? '',
@@ -66,25 +63,27 @@ export default function PengaturanPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true); setSaved(false)
-    const supabase = createClient()
-    await supabase.from('practitioners').update({
-      name: form.name || null,
-      clinic_name: form.clinic_name || null,
-      specialty: form.specialty || null,
-      city: form.city || null,
-      province: form.province || null,
-      public_address: form.public_address || null,
-      description: form.description || null,
-      phone_public: form.phone_public || null,
-      is_listed: form.is_listed,
-      accepts_bookings: form.accepts_bookings,
-      avatar_url: form.avatar_url || null,
-      default_fee: form.default_fee || 0,
-      currency: form.currency || 'IDR',
-    }).eq('id', practitionerId)
+    const res = await fetch('/api/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name || null,
+        clinic_name: form.clinic_name || null,
+        specialty: form.specialty || null,
+        city: form.city || null,
+        province: form.province || null,
+        public_address: form.public_address || null,
+        description: form.description || null,
+        phone_public: form.phone_public || null,
+        is_listed: form.is_listed,
+        accepts_bookings: form.accepts_bookings,
+        default_fee: form.default_fee || 0,
+        currency: form.currency || 'IDR',
+      }),
+    })
     setCurrency(form.currency || 'IDR')
-    setSaving(false); setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setSaving(false)
+    if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000) }
   }
 
   const fo = (e: React.FocusEvent<any>) => (e.target.style.borderColor = 'var(--accent2)')
@@ -152,10 +151,11 @@ export default function PengaturanPage() {
             <div className="p-5 space-y-4">
               {/* Avatar */}
               <AvatarUploader
+                table="practitioners"
+                id={practitionerId}
                 currentUrl={form.avatar_url || undefined}
                 name={form.name || 'DR'}
                 size={80}
-                onUpload={(url) => set('avatar_url', url)}
               />
 
               {/* Foto klinik */}

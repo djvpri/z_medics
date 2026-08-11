@@ -72,14 +72,20 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
 
   async function cancelAppointment() {
     if (!confirm('Batalkan jadwal ini?')) return
-    const supabase = createClient()
-    await supabase.from('appointments').update({ status: 'cancelled' }).eq('id', appt.id)
+    await fetch(`/api/appointments/${appt.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'cancelled' }),
+    })
     onStatusChange()
   }
 
   async function markCompleted() {
-    const supabase = createClient()
-    await supabase.from('appointments').update({ status: 'completed' }).eq('id', appt.id)
+    await fetch(`/api/appointments/${appt.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'completed' }),
+    })
     onStatusChange()
   }
 
@@ -161,20 +167,15 @@ export default function JadwalPage() {
   async function loadAppointments() {
     setLoading(true)
     try {
-      const supabase = createClient()
       const weekStart = new Date(weekDays[0])
       weekStart.setHours(0, 0, 0, 0)
       const weekEnd = new Date(weekDays[6])
       weekEnd.setHours(23, 59, 59, 999)
 
-      const { data } = await supabase
-        .from('appointments')
-        .select('*, patient:patients(name), external_name, external_phone')
-        .gte('scheduled_at', weekStart.toISOString())
-        .lte('scheduled_at', weekEnd.toISOString())
-        .order('scheduled_at')
-
-      setAppointments((data ?? []) as Appointment[])
+      const qs = `start=${weekStart.toISOString()}&end=${weekEnd.toISOString()}`
+      const res = await fetch(`/api/appointments?${qs}`)
+      const data = await res.json()
+      setAppointments((Array.isArray(data) ? data : []) as Appointment[])
     } catch {
       setAppointments([])
     } finally {

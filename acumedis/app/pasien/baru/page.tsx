@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { NewPatientForm } from '@/types'
 import { useT } from '@/contexts/LanguageContext'
 import AvatarUploader from '@/components/ui/AvatarUploader'
@@ -44,13 +43,38 @@ export default function TambahPasienPage() {
     e.preventDefault()
     if (!form.name.trim()) return
     setLoading(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const practitioner_id = user?.id ?? process.env.NEXT_PUBLIC_DEV_PRACTITIONER_ID ?? '00000000-0000-0000-0000-000000000001'
-    const { error } = await supabase.from('patients').insert({ ...form, practitioner_id })
-    setLoading(false)
-    if (error) { alert((t as any).common?.saveFailed ?? 'Failed to save: ' + error.message); return }
-    router.push('/pasien')
+    try {
+      const res = await fetch('/api/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          gender: form.gender,
+          birth_date: form.birth_date || undefined,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+        }),
+      })
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}))
+        throw new Error(b.error || 'Gagal menyimpan')
+      }
+      const patient = await res.json()
+      if (form.avatar_url) {
+        await fetch(`/api/patients/${patient.id}/avatar`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatarBase64: form.avatar_url.split(',')[1] }),
+        })
+      }
+      router.push('/pasien')
+    } catch (err) {
+      console.error('[pasien/baru] save failed:', err)
+      alert((t as any).common?.saveFailed ?? 'Gagal menyimpan: ' + (err as Error).message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

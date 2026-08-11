@@ -28,7 +28,7 @@ const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: 'var(--
 
 interface Item {
   id: string; name: string; category: string; unit: string
-  quantity: number; min_quantity: number; notes: string | null
+  quantity: number; min_quantity: number
 }
 
 function stockStatus(qty: number, min: number): { label: string; bg: string; color: string } {
@@ -40,29 +40,33 @@ function stockStatus(qty: number, min: number): { label: string; bg: string; col
 export default function StokPage() {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
-  const [practitionerId, setPractitionerId] = useState('')
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('Semua')
   const [showForm, setShowForm] = useState(false)
   const [editItem, setEditItem] = useState<Item | null>(null)
   const [saving, setSaving] = useState(false)
   const [adjustingId, setAdjustingId] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', category: 'Herbal', unit: 'pcs', quantity: '', min_quantity: '5', notes: '' })
+  const [form, setForm] = useState({ name: '', category: 'Herbal', unit: 'pcs', quantity: '', min_quantity: '5' })
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) setPractitionerId(user.id)
-      const { data } = await supabase.from('stock_items').select('*').order('category').order('name')
-      setItems(data ?? [])
-      setLoading(false)
+      try {
+        const res = await fetch('/api/stock')
+        if (res.ok) {
+          const data = await res.json()
+          setItems(Array.isArray(data) ? data : [])
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
 
-  function openAdd() { setEditItem(null); setForm({ name: '', category: 'Herbal', unit: 'pcs', quantity: '', min_quantity: '5', notes: '' }); setShowForm(true) }
-  function openEdit(item: Item) { setEditItem(item); setForm({ name: item.name, category: item.category, unit: item.unit, quantity: String(item.quantity), min_quantity: String(item.min_quantity), notes: item.notes ?? '' }); setShowForm(true) }
+  function openAdd() { setEditItem(null); setForm({ name: '', category: 'Herbal', unit: 'pcs', quantity: '', min_quantity: '5' }); setShowForm(true) }
+  function openEdit(item: Item) { setEditItem(item); setForm({ name: item.name, category: item.category, unit: item.unit, quantity: String(item.quantity), min_quantity: String(item.min_quantity) }); setShowForm(true) }
   function setF(k: string, v: string) { setForm(p => ({ ...p, [k]: v })) }
   const fo = (e: React.FocusEvent<any>) => (e.target.style.borderColor = 'var(--accent2)')
   const bl = (e: React.FocusEvent<any>) => (e.target.style.borderColor = 'var(--border)')
@@ -71,30 +75,45 @@ export default function StokPage() {
     e.preventDefault()
     if (!form.name.trim()) return
     setSaving(true)
-    const supabase = createClient()
-    const payload = { name: form.name.trim(), category: form.category, unit: form.unit, quantity: Number(form.quantity) || 0, min_quantity: Number(form.min_quantity) || 5, notes: form.notes || null, practitioner_id: practitionerId }
+    const payload = { name: form.name.trim(), category: form.category, unit: form.unit, quantity: Number(form.quantity) || 0, min_quantity: Number(form.min_quantity) || 5 }
 
-    if (editItem) {
-      const { data } = await supabase.from('stock_items').update(payload).eq('id', editItem.id).select().single()
-      if (data) setItems(prev => prev.map(i => i.id === editItem.id ? data : i))
-    } else {
-      const { data } = await supabase.from('stock_items').insert(payload).select().single()
-      if (data) setItems(prev => [...prev, data].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)))
+    try {
+      if (editItem) {
+        const res = await fetch(`/api/stock/${editItem.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (res.ok) setItems(prev => prev.map(i => i.id === editItem.id ? { ...i, ...payload } : i))
+      } else {
+        const res = await fetch('/api/stock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json()
+        if (data?.id) setItems(prev => [...prev, data].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)))
+      }
+      setShowForm(false)
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
-    setShowForm(false)
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Hapus item ini?')) return
-    await createClient().from('stock_items').delete().eq('id', id)
+    await fetch(`/api/stock/${id}`, { method: 'DELETE' })
     setItems(prev => prev.filter(i => i.id !== id))
   }
 
   async function adjustQty(item: Item, delta: number) {
     const newQty = Math.max(0, item.quantity + delta)
     setAdjustingId(item.id)
-    await createClient().from('stock_items').update({ quantity: newQty }).eq('id', item.id)
+    await fetch(`/api/stock/${item.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: newQty }),
+    })
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, quantity: newQty } : i))
     setAdjustingId(null)
   }
@@ -172,10 +191,6 @@ export default function StokPage() {
                   <label style={lbl}>Batas Minimum (alert)</label>
                   <input type="number" min={1} value={form.min_quantity} onChange={e => setF('min_quantity', e.target.value)} placeholder="5" style={inp} onFocus={fo} onBlur={bl} />
                 </div>
-                <div>
-                  <label style={lbl}>Catatan</label>
-                  <input type="text" value={form.notes} onChange={e => setF('notes', e.target.value)} placeholder="Opsional" style={inp} onFocus={fo} onBlur={bl} />
-                </div>
               </div>
               <div className="flex items-center gap-3">
                 <button type="submit" disabled={saving || !form.name.trim()}
@@ -230,7 +245,6 @@ export default function StokPage() {
                       <tr key={item.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border2)' : 'none' }}>
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ fontWeight: 500, color: 'var(--ink)', fontSize: 13.5 }}>{item.name}</div>
-                          {item.notes && <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 1 }}>{item.notes}</div>}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
                           <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cat.bg, color: cat.color }}>{item.category}</span>

@@ -5,6 +5,6 @@ import { prisma } from '@/lib/prisma/client'
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, tenantId } = await requireAuth()
   if (error) return error
-  await prisma.clinicPhoto.deleteMany({ where: { id: (await params).id, tenantId: tenantId! } })
+  await prisma.expense.deleteMany({ where: { id: (await params).id, tenantId: tenantId! } })
   return NextResponse.json({ success: true })
 }

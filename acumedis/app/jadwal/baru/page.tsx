@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { mockPatients } from '@/lib/mock-data'
 
 const inputStyle: React.CSSProperties = {
@@ -44,14 +43,14 @@ export default function JadwalBaruPage() {
     })(),
     duration_minutes: 45,
     reason: '',
-    notes: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    createClient().from('patients').select('id, name').order('name')
-      .then(({ data }) => { if (data && data.length > 0) setPatients(data) })
+    fetch('/api/patients').then(r => r.ok ? r.json() : []).then((data: any[]) => {
+      if (data && data.length > 0) setPatients(data.map((p: any) => ({ id: p.id, name: p.name })))
+    }).catch(() => {})
   }, [])
 
   function set(k: string, v: any) {
@@ -64,36 +63,19 @@ export default function JadwalBaruPage() {
     setLoading(true)
     setError('')
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const practitioner_id = user?.id ?? process.env.NEXT_PUBLIC_DEV_PRACTITIONER_ID ?? '00000000-0000-0000-0000-000000000001'
-
-    // Hitung nomor antrian untuk hari yang sama
-    const localDate = form.scheduled_at.split('T')[0]
-    const dayStart = new Date(localDate + 'T00:00:00').toISOString()
-    const dayEnd = new Date(localDate + 'T23:59:59').toISOString()
-    const { count } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('practitioner_id', practitioner_id)
-      .neq('status', 'cancelled')
-      .gte('scheduled_at', dayStart)
-      .lte('scheduled_at', dayEnd)
-    const queue_number = (count ?? 0) + 1
-
-    const { error: err } = await supabase.from('appointments').insert({
-      patient_id: form.patient_id,
-      scheduled_at: new Date(form.scheduled_at).toISOString(),
-      duration_minutes: form.duration_minutes,
-      reason: form.reason || null,
-      notes: form.notes || null,
-      practitioner_id,
-      status: 'scheduled',
-      queue_number,
+    const res = await fetch('/api/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        patient_id: form.patient_id,
+        scheduled_at: new Date(form.scheduled_at).toISOString(),
+        duration_minutes: form.duration_minutes,
+        reason: form.reason || null,
+      }),
     })
 
     setLoading(false)
-    if (err) { setError(err.message); return }
+    if (!res.ok) { const b = await res.json().catch(() => ({})); setError(b.error || 'Gagal menyimpan'); return }
     router.push('/jadwal')
     router.refresh()
   }
@@ -144,14 +126,6 @@ export default function JadwalBaruPage() {
                 <input type="text" value={form.reason} onChange={e => set('reason', e.target.value)}
                   placeholder="Contoh: Kontrol nyeri punggung, sesi lanjutan..."
                   style={inputStyle} onFocus={fo} onBlur={bl} />
-              </div>
-
-              {/* Catatan */}
-              <div>
-                <label style={labelStyle}>Catatan (opsional)</label>
-                <textarea value={form.notes} onChange={e => set('notes', e.target.value)}
-                  placeholder="Pesan untuk persiapan sesi, permintaan khusus pasien..."
-                  rows={3} style={{ ...inputStyle, resize: 'none' }} onFocus={fo} onBlur={bl} />
               </div>
 
               {error && (

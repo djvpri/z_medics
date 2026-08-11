@@ -27,38 +27,42 @@ export default function AIPanel() {
 
   useEffect(() => {
     async function generateGreeting() {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-
-      const { data: { user } } = await supabase.auth.getUser()
-      const name = user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? (lang === 'id' ? 'Dokter' : 'Doctor')
+      let name = lang === 'id' ? 'Dokter' : 'Doctor'
+      try {
+        const meRes = await fetch('/api/me')
+        const me = meRes.ok ? await meRes.json() : null
+        if (me?.name) name = me.name
+      } catch {}
 
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
 
-      const { data: appts } = await supabase
-        .from('appointments')
-        .select('scheduled_at, reason, status, patient:patients(name)')
-        .gte('scheduled_at', today.toISOString())
-        .lt('scheduled_at', tomorrow.toISOString())
-        .neq('status', 'cancelled')
-        .order('scheduled_at')
+      let appts: any[] = []
+      try {
+        const qs = `start=${today.toISOString()}&end=${tomorrow.toISOString()}`
+        const apptRes = await fetch(`/api/appointments?${qs}`)
+        const data = apptRes.ok ? await apptRes.json() : []
+        appts = Array.isArray(data) ? data.filter((a: any) => a.status !== 'cancelled') : []
+      } catch {}
 
-      const { count: totalPatients } = await supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true })
+      let totalPatients = 0
+      try {
+        const pRes = await fetch('/api/patients')
+        const pd = pRes.ok ? await pRes.json() : []
+        totalPatients = Array.isArray(pd) ? pd.length : 0
+      } catch {}
 
       const greeting = getGreeting(lang)
-      const count = appts?.length ?? 0
+      const count = appts.length
       let text = `${greeting}, ${name}. `
 
       if (count === 0) {
         text += lang === 'id'
           ? `Tidak ada jadwal sesi hari ini. `
           : `No sessions scheduled for today. `
-        if (totalPatients && totalPatients > 0) {
+        if (totalPatients > 0) {
           text += lang === 'id'
             ? `Anda memiliki <strong>${totalPatients}</strong> pasien terdaftar.`
             : `You have <strong>${totalPatients}</strong> registered patients.`
@@ -72,7 +76,7 @@ export default function AIPanel() {
           ? `Hari ini ada <strong>${count}</strong> jadwal sesi. `
           : `You have <strong>${count}</strong> sessions scheduled today. `
 
-        const upcoming = appts?.find(a => new Date(a.scheduled_at) > new Date() && a.status === 'scheduled')
+        const upcoming = appts.find(a => new Date(a.scheduled_at) > new Date() && a.status === 'scheduled')
         if (upcoming) {
           const patientName = (upcoming.patient as any)?.name ?? (lang === 'id' ? 'Pasien' : 'Patient')
           const time = new Date(upcoming.scheduled_at).toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' })

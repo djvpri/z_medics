@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { toWaLink } from '@/lib/formatMoney'
 
 interface Clinic {
@@ -35,14 +34,13 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('practitioners')
-        .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, email, avatar_url, accepts_bookings, clinic_photos(id, url)')
-        .eq('id', id)
-        .eq('is_listed', true)
-        .single()
-      setClinic(data)
+      try {
+        const res = await fetch(`/api/clinics/${id}`)
+        const data = res.ok ? await res.json() : null
+        setClinic(data)
+      } catch {
+        setClinic(null)
+      }
       setLoading(false)
     }
     load()
@@ -55,18 +53,20 @@ export default function KlinikPage({ params }: { params: Promise<{ id: string }>
     if (!form.patient_name || !form.patient_phone) return
     setSubmitting(true); setError('')
     try {
-      const supabase = createClient()
-      const { error: err } = await supabase.from('appointment_requests').insert({
-        practitioner_id: id,
-        patient_name: form.patient_name,
-        patient_phone: form.patient_phone,
-        patient_email: form.patient_email || null,
-        preferred_date: form.preferred_date || null,
-        preferred_time: form.preferred_time || null,
-        reason: form.reason || null,
-        status: 'pending',
+      const res = await fetch('/api/appointment-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clinic_id: id,
+          name: form.patient_name,
+          phone: form.patient_phone,
+          email: form.patient_email || null,
+          preferred_date: form.preferred_date || null,
+          preferred_time: form.preferred_time || null,
+          reason: form.reason || null,
+        }),
       })
-      if (err) throw err
+      if (!res.ok) throw new Error()
       setSubmitted(true)
     } catch {
       setError('Gagal mengirim permintaan. Coba lagi.')

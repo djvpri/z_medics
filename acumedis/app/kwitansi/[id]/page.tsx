@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { formatMoney } from '@/lib/formatMoney'
 
 function formatDate(d: string) {
@@ -23,21 +22,13 @@ export default function KwitansiPage({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const [{ data: sesiData }, { data: { user } }] = await Promise.all([
-        supabase.from('sessions').select('*, patient:patients(name, phone, gender, birth_date)').eq('id', id).single(),
-        supabase.auth.getUser(),
-      ])
+      const sesiRes = await fetch(`/api/sessions/${id}`)
+      const sesiData = sesiRes.ok ? await sesiRes.json() : null
       setSesi(sesiData)
-      if (user) {
-        const { data: klinikData } = await supabase
-          .from('practitioners')
-          .select('name, clinic_name, public_address, phone_public, city, avatar_url, currency')
-          .eq('id', sesiData?.practitioner_id ?? user.id)
-          .single()
-        setKlinik(klinikData)
-        if (klinikData?.currency) setCurrency(klinikData.currency)
-      }
+      const meRes = await fetch('/api/me')
+      const klinikData = meRes.ok ? await meRes.json() : null
+      setKlinik(klinikData)
+      if (klinikData?.currency) setCurrency(klinikData.currency)
       setLoading(false)
     }
     load()
