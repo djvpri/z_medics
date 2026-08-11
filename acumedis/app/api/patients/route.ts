@@ -7,7 +7,10 @@ export async function GET() {
   if (error) return error
   const patients = await prisma.patient.findMany({
     where: { tenantId: tenantId! },
-    include: { _count: { select: { sessions: true } } },
+    include: {
+      _count: { select: { sessions: true } },
+      sessions: { orderBy: { sessionDate: 'desc' }, take: 1, select: { sessionDate: true } },
+    },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(patients.map(p => ({
@@ -16,6 +19,7 @@ export async function GET() {
     avatarBase64: undefined,
     birth_date: p.birthDate?.toISOString().slice(0, 10),
     total_sessions: p._count.sessions,
+    last_session_date: p.sessions[0]?.sessionDate.toISOString() ?? null,
   })))
 }
 

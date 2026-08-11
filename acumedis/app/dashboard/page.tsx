@@ -20,20 +20,25 @@ export default async function DashboardPage() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const groupedByDay = weekAppts.reduce((acc: Record<string, any[]>, appt: any) => {
+  const weekArray = weekAppts as any[]
+  const groupedByDay = weekArray.reduce((acc: Record<string, any[]>, appt: any) => {
     const d = new Date(appt.scheduled_at)
     d.setHours(0, 0, 0, 0)
     const key = d.toISOString()
     if (!acc[key]) acc[key] = []
     acc[key].push(appt)
     return acc
-  }, {})
+  }, {} as Record<string, any[]>)
 
-  const todayAppts = weekAppts.filter((a: any) => {
+  const todayAppts = weekArray.filter((a: any) => {
     const d = new Date(a.scheduled_at)
     d.setHours(0, 0, 0, 0)
     return d.getTime() === today.getTime()
   })
+
+  const lowStock = (lowStockItems as any[]).map((i: any) => ({
+    id: i.id, name: i.name, category: i.category, quantity: i.quantity, min_quantity: i.minQuantity, unit: i.unit,
+  }))
 
   return (
     <DashboardClient
@@ -43,7 +48,7 @@ export default async function DashboardPage() {
       todayAppts={todayAppts}
       pendingRequests={pendingRequests}
       followUpPatients={followUpPatients}
-      lowStockItems={lowStockItems}
+      lowStockItems={lowStock}
     />
   )
 }

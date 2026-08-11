@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useT } from '@/contexts/LanguageContext'
-import { createClient } from '@/lib/supabase/client'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -12,9 +11,9 @@ export default function LandingPage() {
 
   // Redirect ke dashboard jika sudah login
   useEffect(() => {
-    createClient().auth.getUser().then(({ data: { user } }) => {
-      if (user) router.push('/dashboard')
-    })
+    fetch('/api/me').then(res => {
+      if (res.ok) router.push('/dashboard')
+    }).catch(() => {})
   }, [])
 
   const id = lang === 'id'

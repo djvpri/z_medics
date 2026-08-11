@@ -15,9 +15,7 @@ function DeleteButtonClient({ id }: { id: string }) {
 
   async function handleDelete() {
     setStep('loading')
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
-    await supabase.from('sessions').delete().eq('id', id)
+    await fetch(`/api/sessions/${id}`, { method: 'DELETE' })
     router.push('/sesi')
   }
 
@@ -331,13 +329,8 @@ export default function DetailSesiPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (sesi) return // sudah ketemu di mock
     async function load() {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('sessions')
-        .select('*, patient:patients(id, name, gender)')
-        .eq('id', id)
-        .single()
+      const res = await fetch(`/api/sessions/${id}`)
+      const data = res.ok ? await res.json() : null
       setSesi(data ?? null)
       setFetching(false)
     }

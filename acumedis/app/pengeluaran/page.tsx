@@ -60,7 +60,6 @@ export default function PengeluaranPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [practitionerId, setPractitionerId] = useState('')
   const [form, setForm] = useState({
     expense_date: new Date().toISOString().slice(0, 10),
     amount: '',
@@ -70,15 +69,17 @@ export default function PengeluaranPage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) setPractitionerId(user.id)
-      const { data } = await supabase
-        .from('expenses')
-        .select('id, expense_date, amount, category, description')
-        .order('expense_date', { ascending: false })
-      setExpenses(data ?? [])
-      setLoading(false)
+      try {
+        const res = await fetch('/api/expenses')
+        if (res.ok) {
+          const data = await res.json()
+          setExpenses(Array.isArray(data) ? data : [])
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
@@ -89,27 +90,38 @@ export default function PengeluaranPage() {
     e.preventDefault()
     if (!form.amount || Number(form.amount) <= 0) return
     setSaving(true)
-    const supabase = createClient()
-    const { data, error } = await supabase.from('expenses').insert({
-      practitioner_id: practitionerId,
-      expense_date: form.expense_date,
-      amount: Number(form.amount),
-      category: form.category,
-      description: form.description || null,
-    }).select('id, expense_date, amount, category, description').single()
-    setSaving(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
-    if (data) setExpenses(prev => [data, ...prev])
-    setForm({ expense_date: new Date().toISOString().slice(0, 10), amount: '', category: 'Peralatan', description: '' })
-    setShowForm(false)
+    try {
+      const res = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expense_date: form.expense_date,
+          amount: Number(form.amount),
+          category: form.category,
+          description: form.description || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Gagal menyimpan')
+      const data = await res.json()
+      if (data?.id) setExpenses(prev => [data, ...prev])
+      setForm({ expense_date: new Date().toISOString().slice(0, 10), amount: '', category: 'Peralatan', description: '' })
+      setShowForm(false)
+    } catch (err) {
+      alert('Gagal menyimpan: ' + (err as Error).message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Hapus pengeluaran ini?')) return
     setDeleting(id)
-    await createClient().from('expenses').delete().eq('id', id)
-    setExpenses(prev => prev.filter(e => e.id !== id))
-    setDeleting(null)
+    try {
+      await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
+      setExpenses(prev => prev.filter(e => e.id !== id))
+    } finally {
+      setDeleting(null)
+    }
   }
 
   // Stats

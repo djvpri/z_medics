@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { formatMoney } from '@/lib/formatMoney'
 
 function formatDate(d: string) {
@@ -26,23 +25,26 @@ function LaporanPDFContent() {
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
 
       const monthStr = `${tahun}-${String(bulan).padStart(2, '0')}`
       const start = `${monthStr}-01`
       const end = new Date(tahun, bulan, 0).toISOString().slice(0, 10)
 
-      const [{ data: klinikData }, { data: sessData }, { data: expData }] = await Promise.all([
-        supabase.from('practitioners').select('name, clinic_name, public_address, city, phone_public, avatar_url, currency').eq('id', user.id).single(),
-        supabase.from('sessions').select('session_date, fee, payment_status, chief_complaint, patient:patients(name)').gte('session_date', start).lte('session_date', end).order('session_date'),
-        supabase.from('expenses').select('expense_date, amount, category, description').gte('expense_date', start).lte('expense_date', end).order('expense_date'),
+      const [meRes, sRes, eRes] = await Promise.all([
+        fetch('/api/me'),
+        fetch('/api/sessions'),
+        fetch(`/api/expenses?start=${start}&end=${end}`),
       ])
+      const klinikData = meRes.ok ? await meRes.json() : null
+      const rawSessions = sRes.ok ? await sRes.json() : []
+      const sessData = Array.isArray(rawSessions)
+        ? rawSessions.filter((s: any) => s.session_date?.slice(0, 7) === monthStr).sort((a: any, b: any) => a.session_date.localeCompare(b.session_date))
+        : []
+      const expData = eRes.ok ? await eRes.json() : []
 
       setKlinik(klinikData)
-      setSessions(sessData ?? [])
-      setExpenses(expData ?? [])
+      setSessions(sessData)
+      setExpenses(Array.isArray(expData) ? expData : [])
       if (klinikData?.currency) setCurrency(klinikData.currency)
       setLoading(false)
     }

@@ -4,9 +4,8 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Topbar from '@/components/layout/Topbar'
-import { createClient } from '@/lib/supabase/client'
 import { mockPatients } from '@/lib/mock-data'
-import { NewPatientForm, TongueColor } from '@/types'
+import { NewPatientForm } from '@/types'
 import AvatarUploader from '@/components/ui/AvatarUploader'
 
 const inputStyle: React.CSSProperties = {
@@ -28,15 +27,16 @@ export default function EditPasienPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     async function load() {
       try {
-        const supabase = createClient()
-        const { data } = await supabase.from('patients').select('*').eq('id', id).single()
-        if (data) {
-          setForm({ name: data.name, gender: data.gender, birth_date: data.birth_date ?? '', phone: data.phone ?? '', email: data.email ?? '', address: data.address ?? '', avatar_url: data.avatar_url ?? '' })
-        } else {
-          // fallback mock
-          const mock = mockPatients.find(p => p.id === id)
-          if (mock) setForm({ name: mock.name, gender: mock.gender, birth_date: mock.birth_date ?? '', phone: mock.phone ?? '', email: mock.email ?? '', address: mock.address ?? '' })
+        const res = await fetch(`/api/patients/${id}`)
+        if (res.ok) {
+          const d = await res.json()
+          if (d && d.id) {
+            setForm({ name: d.name, gender: d.gender, birth_date: d.birth_date ?? '', phone: d.phone ?? '', email: d.email ?? '', address: d.address ?? '', avatar_url: d.avatar_url ?? '' })
+            return
+          }
         }
+        const mock = mockPatients.find(p => p.id === id)
+        if (mock) setForm({ name: mock.name, gender: mock.gender, birth_date: mock.birth_date ?? '', phone: mock.phone ?? '', email: mock.email ?? '', address: mock.address ?? '' })
       } catch {
         const mock = mockPatients.find(p => p.id === id)
         if (mock) setForm({ name: mock.name, gender: mock.gender, birth_date: mock.birth_date ?? '', phone: mock.phone ?? '', email: mock.email ?? '', address: mock.address ?? '' })
@@ -55,12 +55,27 @@ export default function EditPasienPage({ params }: { params: Promise<{ id: strin
     e.preventDefault()
     if (!form.name.trim()) return
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('patients').update({ ...form }).eq('id', id)
-    setLoading(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
-    router.push(`/pasien/${id}`)
-    router.refresh()
+    try {
+      const res = await fetch(`/api/patients/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          gender: form.gender,
+          birth_date: form.birth_date || undefined,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+        }),
+      })
+      if (!res.ok) throw new Error('Gagal menyimpan')
+      router.push(`/pasien/${id}`)
+      router.refresh()
+    } catch {
+      alert('Gagal menyimpan pasien')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (fetching) {
@@ -83,11 +98,11 @@ export default function EditPasienPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="p-4 md:p-6 space-y-4">
               <AvatarUploader
+                table="patients"
+                id={id}
                 currentUrl={form.avatar_url || undefined}
                 name={form.name || '?'}
                 size={72}
-                filePrefix={`patient-${id}`}
-                onUpload={(url) => setForm(prev => ({ ...prev, avatar_url: url }))}
               />
               <div>
                 <label style={labelStyle}>Nama Lengkap <span style={{ color: 'var(--red)' }}>*</span></label>

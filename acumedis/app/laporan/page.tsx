@@ -60,21 +60,21 @@ export default function LaporanPage() {
   useEffect(() => {
     async function load() {
       try {
-        const supabase = createClient()
-
-        const [{ count: totalPatients }, { count: totalSessions }, { data: sessions }, { data: expensesData }] = await Promise.all([
-          supabase.from('patients').select('*', { count: 'exact', head: true }),
-          supabase.from('sessions').select('*', { count: 'exact', head: true }),
-          supabase.from('sessions').select('id, session_date, chief_complaint, fee, payment_status, patient:patients(name)').order('session_date', { ascending: false }).limit(100),
-          supabase.from('expenses').select('expense_date, amount').order('expense_date', { ascending: false }).limit(200),
+        const [pRes, sRes, eRes] = await Promise.all([
+          fetch('/api/patients'),
+          fetch('/api/sessions'),
+          fetch('/api/expenses'),
         ])
+        const patients = pRes.ok ? await pRes.json() : []
+        const sessions = sRes.ok ? await sRes.json() : []
+        const expensesData = eRes.ok ? await eRes.json() : []
 
-        const allSessions = (sessions && sessions.length > 0)
+        const allSessions = (Array.isArray(sessions) && sessions.length > 0)
           ? sessions
           : mockSessions.map(s => ({ ...s, patient: s.patient ? { name: s.patient.name } : null }))
 
-        const totalP = totalPatients ?? mockPatients.length
-        const totalS = totalSessions ?? mockSessions.length
+        const totalP = Array.isArray(patients) ? patients.length : 0
+        const totalS = allSessions.length
 
         // Monthly data (last 6 months)
         const now = new Date()

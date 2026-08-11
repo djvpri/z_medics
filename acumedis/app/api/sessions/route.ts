@@ -10,7 +10,24 @@ export async function GET() {
     include: { patient: { select: { id: true, name: true, gender: true } } },
     orderBy: { sessionDate: 'desc' },
   })
-  return NextResponse.json(sessions)
+  return NextResponse.json(sessions.map(s => ({
+    id: s.id,
+    patient_id: s.patientId,
+    session_date: s.sessionDate.toISOString(),
+    chief_complaint: s.chiefComplaint,
+    tongue_color: s.tongueColor,
+    tongue_coating: s.tongueCoating,
+    pulse_quality: s.pulseQuality,
+    pain_scale: s.painScale,
+    tcm_diagnosis: s.tcmDiagnosis,
+    points_used: s.pointsUsed,
+    duration_minutes: s.durationMinutes,
+    notes: s.notes,
+    fee: s.fee,
+    payment_status: s.paymentStatus,
+    created_at: s.createdAt.toISOString(),
+    patient: s.patient ? { id: s.patient.id, name: s.patient.name, gender: s.patient.gender } : null,
+  })))
 }
 
 export async function POST(req: NextRequest) {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { toWaLink } from '@/lib/formatMoney'
 
 const COUNTRIES = [
@@ -37,24 +36,16 @@ export default function FindPage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
-      const [{ data: verified }, { data: unverified }] = await Promise.all([
-        supabase
-          .from('practitioners')
-          .select('id, name, clinic_name, city, province, public_address, description, specialty, phone_public, avatar_url, clinic_photos(url)')
-          .eq('is_listed', true)
-          .order('name'),
-        supabase
-          .from('unverified_clinics')
-          .select('id, name, clinic_name, city, country, public_address, description, specialty, phone_public')
-          .order('name'),
-      ])
-      const merged: Clinic[] = [
-        ...(verified ?? []).map(c => ({ ...c, verified: true })),
-        ...(unverified ?? []).map(c => ({ ...c, province: c.country, avatar_url: null, clinic_photos: [], verified: false })),
-      ].sort((a, b) => (a.clinic_name ?? a.name).localeCompare(b.clinic_name ?? b.name))
-      setClinics(merged)
-      setFiltered(merged)
+      try {
+        const res = await fetch('/api/clinics')
+        const data = res.ok ? await res.json() : []
+        const list = (Array.isArray(data) ? data : []).map((c: any) => ({ ...c, verified: true }))
+        setClinics(list)
+        setFiltered(list)
+      } catch {
+        setClinics([])
+        setFiltered([])
+      }
       setLoading(false)
     }
     load()

@@ -49,10 +49,9 @@ export default function PermintaanPage() {
   const [schedForm, setSchedForm] = useState<ScheduleForm>({ date: '', time: '', duration: 45, notes: '' })
 
   async function load() {
-    const supabase = createClient()
-    const query = supabase.from('appointment_requests').select('*').order('created_at', { ascending: false })
-    const { data } = filter === 'all' ? await query : await query.eq('status', filter)
-    setRequests(data ?? [])
+    const res = await fetch(`/api/appointment-requests?status=${filter}`)
+    const data = res.ok ? await res.json() : []
+    setRequests(Array.isArray(data) ? data : [])
     setLoading(false)
   }
 
@@ -75,38 +74,41 @@ export default function PermintaanPage() {
 
   async function confirmWithSchedule(req: Request) {
     setActionId(req.id)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
 
-    // Cari patient_id berdasarkan nomor telepon
-    const { data: patient } = await supabase
-      .from('patients').select('id')
-      .ilike('phone', `%${req.patient_phone}%`)
-      .limit(1).single()
+    // Cari patient_id berdasarkan nomor telepon (client-side dari daftar pasien)
+    let patientId: string | null = null
+    const pRes = await fetch('/api/patients')
+    if (pRes.ok) {
+      const allPatients = await pRes.json()
+      const match = Array.isArray(allPatients) ? allPatients.find((p: any) => p.phone && req.patient_phone && p.phone.includes(req.patient_phone)) : null
+      patientId = match?.id ?? null
+    }
 
     const scheduledAt = new Date(`${schedForm.date}T${schedForm.time}`).toISOString()
 
     // Buat appointment — pakai patient_id jika ada, fallback ke data eksternal
-    await supabase.from('appointments').insert({
-      practitioner_id: user.id,
-      patient_id: patient?.id ?? null,
-      scheduled_at: scheduledAt,
-      reason: req.reason,
-      status: 'scheduled',
-      duration_minutes: schedForm.duration,
-      notes: schedForm.notes || null,
-      // Simpan data pasien eksternal jika belum terdaftar
-      ...(patient?.id ? {} : {
-        external_name: req.patient_name,
-        external_phone: req.patient_phone,
+    await fetch('/api/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        patient_id: patientId,
+        scheduled_at: scheduledAt,
+        reason: req.reason,
+        status: 'scheduled',
+        duration_minutes: schedForm.duration,
+        ...(patientId ? {} : {
+          external_name: req.patient_name,
+          external_phone: req.patient_phone,
+        }),
       }),
     })
 
     // Update status request
-    await supabase.from('appointment_requests')
-      .update({ status: 'confirmed', notes: schedForm.notes || null })
-      .eq('id', req.id)
+    await fetch(`/api/appointment-requests/${req.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'confirmed', notes: schedForm.notes || null }),
+    })
 
     setSchedulingId(null)
     await load()
@@ -115,8 +117,11 @@ export default function PermintaanPage() {
 
   async function declineRequest(reqId: string) {
     setActionId(reqId)
-    const supabase = createClient()
-    await supabase.from('appointment_requests').update({ status: 'declined' }).eq('id', reqId)
+    await fetch(`/api/appointment-requests/${reqId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'declined' }),
+    })
     await load()
     setActionId(null)
   }
